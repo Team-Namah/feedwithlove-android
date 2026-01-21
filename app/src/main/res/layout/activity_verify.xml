@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:isScrollContainer="true"
+    android:fitsSystemWindows="true"
+    android:background="@color/love_bg_warm"
+    tools:context=".VerifyActivity">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp">
+
+        <!-- Back Button -->
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_design2_card"
+            android:src="@drawable/ic_back_chevron"
+            android:padding="12dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/love_text_deep" />
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="Verify Code"
+            android:textColor="@color/love_text_deep"
+            android:textSize="32sp"
+            android:fontFamily="@font/moniqa_variable"
+            app:fontVariationSettings="'wght'900, 'wdth' 150"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnBack" />
+
+        <!-- Subtitle -->
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Please enter the 6-digit code sent to your email to verify your account."
+            android:textColor="@color/love_text_deep"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle" />
+
+        <!-- OTP Input Container -->
+        <FrameLayout
+            android:id="@+id/flCodeContainer"
+            android:layout_width="wrap_content"
+            android:layout_height="72dp"
+            android:layout_marginTop="48dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvSubtitle">
+
+            <!-- Visual Layer: 6 Boxes -->
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:orientation="horizontal">
+                <TextView android:id="@+id/tvCode1" android:layout_width="46dp" android:layout_height="60dp" android:layout_margin="4dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="24sp" android:textStyle="bold" />
+                <TextView android:id="@+id/tvCode2" android:layout_width="46dp" android:layout_height="60dp" android:layout_margin="4dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="24sp" android:textStyle="bold" />
+                <TextView android:id="@+id/tvCode3" android:layout_width="46dp" android:layout_height="60dp" android:layout_margin="4dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="24sp" android:textStyle="bold" />
+                <TextView android:id="@+id/tvCode4" android:layout_width="46dp" android:layout_height="60dp" android:layout_margin="4dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="24sp" android:textStyle="bold" />
+                <TextView android:id="@+id/tvCode5" android:layout_width="46dp" android:layout_height="60dp" android:layout_margin="4dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="24sp" android:textStyle="bold" />
+                <TextView android:id="@+id/tvCode6" android:layout_width="46dp" android:layout_height="60dp" android:layout_margin="4dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="24sp" android:textStyle="bold" />
+            </LinearLayout>
+
+            <!-- Input Layer: Transparent EditText -->
+            <EditText
+                android:id="@+id/etCode"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/transparent"
+                android:cursorVisible="false"
+                android:inputType="number"
+                android:digits="0123456789"
+                android:maxLength="6"
+                android:textColor="@android:color/transparent"
+                android:textSize="1sp"
+                android:focusable="true"
+                android:focusableInTouchMode="true"
+                android:importantForAutofill="no" />
+        </FrameLayout>
+
+        <!-- Verify Button -->
+        <Button
+            android:id="@+id/btnVerify"
+            android:layout_width="0dp"
+            android:layout_height="64dp"
+            android:layout_marginTop="48dp"
+            android:background="@drawable/bg_design3_button"
+            android:text="Verify"
+            android:textAllCaps="false"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            android:fontFamily="@font/moniqa_variable"
+            app:fontVariationSettings="'wght'700, 'wdth' 150"
+            app:backgroundTint="@null"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/flCodeContainer" />
+
+        <!-- Resend Section -->
+        <LinearLayout
+            android:id="@+id/layoutResend"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="24dp"
+            app:layout_constraintTop_toBottomOf="@id/btnVerify"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintVertical_bias="0.0">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Didn't receive the code? "
+                android:textColor="@color/love_text_deep"
+                android:textSize="14sp"/>
+
+            <TextView
+                android:id="@+id/tvResend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Resend"
+                android:textColor="@color/love_primary"
+                android:textSize="14sp"
+                android:textStyle="bold"/>
+        </LinearLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

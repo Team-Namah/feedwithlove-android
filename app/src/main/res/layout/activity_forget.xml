@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:isScrollContainer="true"
+    android:fitsSystemWindows="true"
+    android:background="@color/love_bg_warm"
+    tools:context=".ForgetActivity">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="24dp">
+
+        <!-- Back Button -->
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_design2_card"
+            android:src="@drawable/ic_back_chevron"
+            android:padding="12dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/love_text_deep" />
+
+        <!-- Title -->
+        <TextView
+            android:id="@+id/tvTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:text="Forgot Password"
+            android:textColor="@color/love_text_deep"
+            android:textSize="32sp"
+            android:fontFamily="@font/moniqa_variable"
+            app:fontVariationSettings="'wght'900, 'wdth' 150"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/btnBack" />
+
+        <!-- EMAIL ENTRY SECTION -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutEmailEntry"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="visible"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle">
+
+            <TextView
+                android:id="@+id/tvSubtitleEmail"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="Enter your email address to receive a verification code."
+                android:textColor="@color/love_text_deep"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- Email Label -->
+            <TextView
+                android:id="@+id/tvEmailLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="Email"
+                android:textColor="@color/love_text_deep"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvSubtitleEmail" />
+
+            <EditText
+                android:id="@+id/etForgotEmail"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_design3_field"
+                android:hint="Your email"
+                android:inputType="textEmailAddress"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:gravity="center_vertical"
+                android:includeFontPadding="false"
+                android:textColorHint="#CCCCCC"
+                android:textSize="16sp"
+                android:textColor="@color/love_text_deep"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvEmailLabel" />
+
+            <Button
+                android:id="@+id/btnSendCode"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_marginTop="32dp"
+                android:background="@drawable/bg_design3_button"
+                android:text="Send Code"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:fontFamily="@font/moniqa_variable"
+                app:fontVariationSettings="'wght'700, 'wdth' 150"
+                app:backgroundTint="@null"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etForgotEmail" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- VERIFICATION CODE SECTION -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/layoutVerifyCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:layout_constraintTop_toBottomOf="@id/tvTitle">
+
+            <TextView
+                android:id="@+id/tvSubtitleVerify"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:text="We have sent a verification code to your email."
+                android:textColor="@color/love_text_deep"
+                android:textSize="14sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <!-- OTP Input Container -->
+            <FrameLayout
+                android:id="@+id/flCodeContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="72dp"
+                android:layout_marginTop="40dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvSubtitleVerify">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+                    <TextView android:id="@+id/tvCode1" android:layout_width="44dp" android:layout_height="56dp" android:layout_margin="3dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="22sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/tvCode2" android:layout_width="44dp" android:layout_height="56dp" android:layout_margin="3dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="22sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/tvCode3" android:layout_width="44dp" android:layout_height="56dp" android:layout_margin="3dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="22sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/tvCode4" android:layout_width="44dp" android:layout_height="56dp" android:layout_margin="3dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="22sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/tvCode5" android:layout_width="44dp" android:layout_height="56dp" android:layout_margin="3dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="22sp" android:textStyle="bold" />
+                    <TextView android:id="@+id/tvCode6" android:layout_width="44dp" android:layout_height="56dp" android:layout_margin="3dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="22sp" android:textStyle="bold" />
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/etVerificationCode"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:background="@android:color/transparent"
+                    android:cursorVisible="false"
+                    android:inputType="number"
+                    android:digits="0123456789"
+                    android:maxLength="6"
+                    android:textColor="@android:color/transparent"
+                    android:textSize="28sp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:letterSpacing="1.1"
+                    android:focusable="true"
+                    android:focusableInTouchMode="true"
+                    android:importantForAutofill="no" />
+            </FrameLayout>
+
+            <!-- New Password Label -->
+            <TextView
+                android:id="@+id/tvNewPasswordLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="32dp"
+                android:text="New Password"
+                android:textColor="@color/design3TextSecondary"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/flCodeContainer" />
+
+            <EditText
+                android:id="@+id/etNewPassword"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_marginTop="8dp"
+                android:background="@drawable/bg_design3_field"
+                android:hint="Enter new password"
+                android:inputType="textPassword"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:gravity="center_vertical"
+                android:includeFontPadding="false"
+                android:textColorHint="#CCCCCC"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tvNewPasswordLabel" />
+
+            <Button
+                android:id="@+id/btnResetPassword"
+                android:layout_width="0dp"
+                android:layout_height="64dp"
+                android:layout_marginTop="32dp"
+                android:background="@drawable/bg_design3_button"
+                android:text="Verify &amp; Reset"
+                android:textAllCaps="false"
+                android:textColor="@color/white"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                app:backgroundTint="@null"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/etNewPassword" />
+
+            <TextView
+                android:id="@+id/tvResendCode"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:text="Didn\u0027t receive the code? Resend"
+                android:textColor="@color/design3Orange"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/btnResetPassword" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

@@ -2,4 +2,19 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- FeedWithLove Theme: Warm Heart Palette -->
+    <!-- Represents Compassion & Cleanliness -->
+    <color name="love_bg_warm">#FFF5F7</color> 
+    <!-- Main brand color: Energetic Love -->
+    <color name="love_primary">#FF4D6D</color> 
+    <!-- For secondary actions and highlights -->
+    <color name="love_secondary">#FF758F</color>
+    <!-- For cards and surfaces -->
+    <color name="love_surface">#FFFFFF</color>
+    <!-- Deep contrast for text, feels more premium than pure black -->
+    <color name="love_text_deep">#4A0E0E</color>
+    <!-- Soft accent for borders/icons -->
+    <color name="love_pink_soft">#FFB3C1</color>
+
 </resources>

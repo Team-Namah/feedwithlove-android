@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/love_bg_warm"
+    tools:context=".SplashActivity">
+
+    <!-- Background Image -->
+    <ImageView
+        android:id="@+id/ivVacuum"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:src="@drawable/helping_hands"
+        android:scaleType="centerCrop"
+        android:alpha="0.4"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- App Name -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tvAppName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="100dp"
+        android:text="FeedWithLove"
+        android:textColor="@color/love_primary"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Headline -->
+    <com.google.android.material.textview.MaterialTextView
+        android:id="@+id/tvHeadline"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="40dp"
+        android:text="CONNECTING SURPLUS\n \tTO SMILES"
+        android:textColor="@color/love_text_deep"
+        android:textSize="40sp"
+        android:lineSpacingExtra="8dp"
+        android:fontFamily="@font/moniqa_variable"
+        app:fontVariationSettings="'wght' 900, 'wdth' 150"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvAppName" />
+
+    <!-- Bottom Controls Container -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_marginBottom="64dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginEnd="24dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <!-- Background Card with Pink Gradient -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:cardCornerRadius="40dp"
+            app:cardElevation="0dp">
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_pink_gradient" />
+        </androidx.cardview.widget.CardView>
+
+        <!-- Slide to Start Button -->
+        <com.ncorti.slidetoact.SlideToActView
+            android:id="@+id/welcomeSlider"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            app:outer_color="@android:color/transparent"
+            app:inner_color="@color/white"
+            app:slider_icon_color="@color/love_primary"
+            app:text="Get Started  >>>"
+            app:text_color="@color/white"
+            app:text_size="18sp"
+            app:slider_height="80dp"
+            app:area_margin="4dp" />
+
+    </FrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

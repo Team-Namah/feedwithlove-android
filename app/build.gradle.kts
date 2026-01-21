@@ -41,4 +41,13 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+
+    implementation("com.amazonaws:aws-android-sdk-core:2.81.1")
+    implementation("com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.81.1")
+    implementation("com.amazonaws:aws-android-sdk-mobile-client:2.74.0")
+    implementation("com.amazonaws:aws-android-sdk-s3:2.81.1")
+
+    implementation("androidx.viewpager2:viewpager2:1.1.0")
+    implementation("com.ncorti:slidetoact:0.11.0")
+    implementation("com.github.ibrahimsn98:SmoothBottomBar:1.7.9")
 }
