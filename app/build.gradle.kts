@@ -50,4 +50,5 @@ dependencies {
     implementation("androidx.viewpager2:viewpager2:1.1.0")
     implementation("com.ncorti:slidetoact:0.11.0")
     implementation("com.github.ibrahimsn98:SmoothBottomBar:1.7.9")
+    implementation("androidx.biometric:biometric:1.2.0-alpha05")
 }

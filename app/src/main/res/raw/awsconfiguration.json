@@ -1,0 +1,21 @@
+{
+  "UserAgent": "aws-sdk-android",
+  "Version": "1.0",
+
+  "CredentialsProvider": {
+    "CognitoIdentity": {
+      "Default": {
+        "PoolId": "ap-south-1:7e6d93dc-68a3-4606-a15e-28cf4b56c954",
+        "Region": "ap-south-1"
+      }
+    }
+  },
+
+  "CognitoUserPool": {
+    "Default": {
+      "PoolId": "ap-south-1_ZFRuY4oXt",
+      "AppClientId": "6s0eacmioaf714j5h5usqn60ke",
+      "Region": "ap-south-1"
+    }
+  }
+}
