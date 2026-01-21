@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<font-family xmlns:app="http://schemas.android.com/apk/res-auto">
+    <font
+        app:font="@font/moniqa_variable"
+        app:fontStyle="normal"
+        app:fontWeight="900"
+        app:fontVariationSettings="'wght' 900, 'wdth' 150, 'ital' 0, 'opsz' 12" />
+</font-family>

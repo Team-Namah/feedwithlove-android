@@ -4,8 +4,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
     android:background="@color/love_bg_warm"
+    android:fillViewport="true"
     tools:context=".SignupActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -28,8 +28,8 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:background="@drawable/bg_design2_card"
-            android:src="@drawable/ic_back_chevron"
             android:padding="12dp"
+            android:src="@drawable/ic_back_chevron"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/vTopSpacer"
             app:tint="@color/love_text_deep" />
@@ -47,11 +47,11 @@
             android:id="@+id/tvTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:fontFamily="@font/moniqa_variable"
             android:text="Sign up"
             android:textColor="@color/love_text_deep"
             android:textSize="32sp"
             android:textStyle="bold"
-            android:fontFamily="@font/moniqa_variable"
             app:fontVariationSettings="'wght'900, 'wdth' 150"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/vTitleSpacer" />
@@ -89,15 +89,15 @@
             android:layout_height="56dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/bg_design3_field"
+            android:gravity="center_vertical"
             android:hint="Your full name"
+            android:includeFontPadding="false"
             android:inputType="textPersonName"
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
-            android:gravity="center_vertical"
-            android:includeFontPadding="false"
+            android:textColor="@color/love_text_deep"
             android:textColorHint="#CCCCCC"
             android:textSize="16sp"
-            android:textColor="@color/love_text_deep"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvNameLabel" />
@@ -122,18 +122,81 @@
             android:layout_height="56dp"
             android:layout_marginTop="8dp"
             android:background="@drawable/bg_design3_field"
+            android:gravity="center_vertical"
             android:hint="Your email"
+            android:includeFontPadding="false"
             android:inputType="textEmailAddress"
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
-            android:gravity="center_vertical"
-            android:includeFontPadding="false"
+            android:textColor="@color/love_text_deep"
             android:textColorHint="#CCCCCC"
             android:textSize="16sp"
-            android:textColor="@color/love_text_deep"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvEmailLabel" />
+
+        <!-- Role Label -->
+        <TextView
+            android:id="@+id/tvRoleLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Role"
+            android:textColor="@color/love_text_deep"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/etEmail" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/roleLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:cardBackgroundColor="@android:color/transparent"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="0dp"
+            app:layout_constraintTop_toBottomOf="@id/tvRoleLabel">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingVertical="12dp"
+                android:paddingHorizontal="30dp"
+                android:background="@drawable/bg_design3_field">
+
+                <RelativeLayout
+                    android:id="@+id/rlRolePicker"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="?attr/selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    app:layout_constraintTop_toBottomOf="@id/tvRoleLabel">
+
+                    <TextView
+                        android:id="@+id/tvRoleSelected"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:paddingVertical="12dp"
+                        android:text="SELECT ROLE TYPE"
+                        android:textColor="@color/love_primary"
+                        android:textSize="16sp" />
+
+                    <ImageView
+                        android:layout_width="16dp"
+                        android:layout_height="16dp"
+                        android:layout_alignParentEnd="true"
+                        android:layout_centerVertical="true"
+                        android:rotation="-90"
+                        android:src="@drawable/ic_back_chevron"
+                        app:tint="#4D000000" />
+                </RelativeLayout>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </com.google.android.material.card.MaterialCardView>
 
         <!-- Password Label -->
         <TextView
@@ -146,7 +209,7 @@
             android:textSize="14sp"
             android:textStyle="bold"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/etEmail" />
+            app:layout_constraintTop_toBottomOf="@id/roleLayout" />
 
         <!-- Password Field -->
         <com.google.android.material.textfield.TextInputLayout
@@ -154,30 +217,30 @@
             android:layout_width="0dp"
             android:layout_height="56dp"
             android:layout_marginTop="8dp"
-            app:hintEnabled="false"
             app:boxBackgroundMode="none"
-            app:passwordToggleEnabled="true"
-            app:passwordToggleTint="@color/love_text_deep"
+            app:hintEnabled="false"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tvPasswordLabel">
+            app:layout_constraintTop_toBottomOf="@id/tvPasswordLabel"
+            app:passwordToggleEnabled="true"
+            app:passwordToggleTint="@color/love_text_deep">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/etPassword"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:background="@drawable/bg_design3_field"
+                android:gravity="center_vertical"
                 android:hint="Your password"
+                android:includeFontPadding="false"
                 android:inputType="textPassword"
                 android:paddingStart="20dp"
-                android:paddingEnd="48dp"
                 android:paddingTop="0dp"
+                android:paddingEnd="48dp"
                 android:paddingBottom="0dp"
-                android:gravity="center_vertical"
-                android:includeFontPadding="false"
+                android:textColor="@color/love_text_deep"
                 android:textColorHint="#CCCCCC"
-                android:textSize="16sp"
-                android:textColor="@color/love_text_deep"/>
+                android:textSize="16sp" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Message -->
@@ -200,14 +263,14 @@
             android:layout_height="64dp"
             android:layout_marginTop="32dp"
             android:background="@drawable/bg_design3_button"
+            android:fontFamily="@font/moniqa_variable"
             android:text="Create Account"
             android:textAllCaps="false"
             android:textColor="@color/white"
             android:textSize="20sp"
             android:textStyle="bold"
-            android:fontFamily="@font/moniqa_variable"
-            app:fontVariationSettings="'wght'600, 'wdth' 150"
             app:backgroundTint="@null"
+            app:fontVariationSettings="'wght'600, 'wdth' 150"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/tvMessage" />

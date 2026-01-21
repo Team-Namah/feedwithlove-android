@@ -44,10 +44,9 @@
         android:layout_marginEnd="40dp"
         android:text="CONNECTING SURPLUS\n \tTO SMILES"
         android:textColor="@color/love_text_deep"
-        android:textSize="40sp"
+        android:textSize="55sp"
         android:lineSpacingExtra="8dp"
-        android:fontFamily="@font/moniqa_variable"
-        app:fontVariationSettings="'wght' 900, 'wdth' 150"
+        android:fontFamily="@font/moniqa_black_paragraph"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tvAppName" />
