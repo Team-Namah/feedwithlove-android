@@ -31,6 +31,18 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
+    sourceSets {
+        getByName("main") {
+            res.srcDirs(
+                "src/main/res/layouts/donor",
+                "src/main/res/layouts/volunteer",
+                "src/main/res/layouts/receiver",
+                "src/main/res/layouts",
+                "src/main/res"
+            )
+        }
+    }
 }
 
 dependencies {
@@ -51,4 +63,5 @@ dependencies {
     implementation("com.ncorti:slidetoact:0.11.0")
     implementation("com.github.ibrahimsn98:SmoothBottomBar:1.7.9")
     implementation("androidx.biometric:biometric:1.2.0-alpha05")
+    implementation("com.squareup.picasso:picasso:2.8")
 }

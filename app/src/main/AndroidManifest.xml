@@ -12,6 +12,18 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FeedWithLove">
         <activity
+            android:name="ui.donor.DonorFoodUploadActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DashboardReceiverActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DashboardVolunteerActivity"
+            android:exported="false" />
+        <activity
+            android:name=".DashboardDonorActivity"
+            android:exported="false" />
+        <activity
             android:name=".DashboardActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />

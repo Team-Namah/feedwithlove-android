@@ -6,8 +6,8 @@
         android:icon="@drawable/ic_home_svg"/>
     <item
         android:id="@+id/stats"
-        android:title="Stats"
-        android:icon="@drawable/ic_stats_svg"/>
+        android:title="History"
+        android:icon="@drawable/ic_history_svg"/>
     <item
         android:id="@+id/profile"
         android:title="Profile"

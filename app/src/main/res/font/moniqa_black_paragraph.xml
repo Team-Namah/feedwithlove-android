@@ -4,5 +4,5 @@
         app:font="@font/moniqa_variable"
         app:fontStyle="normal"
         app:fontWeight="900"
-        app:fontVariationSettings="'wght' 900, 'wdth' 150, 'ital' 0, 'opsz' 12" />
+        app:fontVariationSettings="'wght' 900, 'wdth' 100, 'ital' 0, 'opsz' 12" />
 </font-family>

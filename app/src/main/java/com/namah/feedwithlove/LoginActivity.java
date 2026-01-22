@@ -103,22 +103,53 @@ public class LoginActivity extends AppCompatActivity {
                 new Callback<SignInResult>() {
                     @Override
                     public void onResult(SignInResult signInResult) {
-                        runOnUiThread(() -> {
-                            saveLoginState(true);
+                        // 1. Fetch user attributes from Cognito
+                        AWSMobileClient.getInstance().getUserAttributes(new Callback<java.util.Map<String, String>>() {
+                            @Override
+                            public void onResult(java.util.Map<String, String> attributes) {
+                                // 2. Extract the custom:role
+                                String role = attributes.get("custom:role");
+                                if (role == null) role = "RECEIVER"; // Default fallback
+                                saveLoginState(true);
 
-                            Toast.makeText(
-                                    LoginActivity.this,
-                                    "Login Successful",
-                                    Toast.LENGTH_SHORT
-                            ).show();
+                                // 3. Save role to SharedPreferences for global access
+                                final String finalRole = role;
+                                getSharedPreferences("auth", MODE_PRIVATE)
+                                        .edit()
+                                        .putString("userRole", finalRole)
+                                        .apply();
 
-                            startActivity(
-                                    new Intent(
-                                            LoginActivity.this,
-                                            DashboardActivity.class
-                                    )
-                            );
-                            finish();
+                                runOnUiThread(() -> {
+                                    // 4. Navigate based on the role
+                                    Intent intent;
+                                    switch (finalRole.toUpperCase()) {
+                                        case "DONOR":
+                                            // Replace with your specific Donor Activity if different
+                                            intent = new Intent(LoginActivity.this, DashboardDonorActivity.class);
+                                            break;
+                                        case "VOLUNTEER":
+                                            intent = new Intent(LoginActivity.this, DashboardVolunteerActivity.class);
+                                            break;
+                                        default: // RECEIVER
+                                            intent = new Intent(LoginActivity.this, DashboardReceiverActivity.class);
+                                            break;
+                                    }
+
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    startActivity(intent);
+                                    finish();
+                                });
+                            }
+
+                            @Override
+                            public void onError(Exception e) {
+                                Log.e("AWS_ATTRS", "Failed to fetch role: " + e.getMessage());
+                                // Fallback: Go to Dashboard anyway if attributes fail
+                                runOnUiThread(() -> {
+                                    startActivity(new Intent(LoginActivity.this, DashboardActivity.class));
+                                    finish();
+                                });
+                            }
                         });
                     }
 
@@ -155,17 +186,32 @@ public class LoginActivity extends AppCompatActivity {
                         new BiometricPrompt.AuthenticationCallback() {
 
                             @Override
-                            public void onAuthenticationSucceeded(
-                                    BiometricPrompt.AuthenticationResult result) {
+                            public void onAuthenticationSucceeded(BiometricPrompt.AuthenticationResult result) {
                                 super.onAuthenticationSucceeded(result);
 
-                                startActivity(
-                                        new Intent(
-                                                LoginActivity.this,
-                                                DashboardActivity.class
-                                        )
-                                );
-                                finish();
+                                // Retrieve the saved role from the last successful login
+                                String savedRole = getSharedPreferences("auth", MODE_PRIVATE).getString("userRole", "RECEIVER");
+
+                                runOnUiThread(() -> {
+                                    // 4. Navigate based on the role
+                                    Intent intent;
+                                    switch (savedRole.toUpperCase()) {
+                                        case "DONOR":
+                                            // Replace with your specific Donor Activity if different
+                                            intent = new Intent(LoginActivity.this, DashboardDonorActivity.class);
+                                            break;
+                                        case "VOLUNTEER":
+                                            intent = new Intent(LoginActivity.this, DashboardVolunteerActivity.class);
+                                            break;
+                                        default: // RECEIVER
+                                            intent = new Intent(LoginActivity.this, DashboardReceiverActivity.class);
+                                            break;
+                                    }
+
+                                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    startActivity(intent);
+                                    finish();
+                                });
                             }
 
                             @Override
