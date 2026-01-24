@@ -1,0 +1,49 @@
+{
+  "project_info": {
+    "project_number": "58004774376",
+    "firebase_url": "https://feedwithlove-094f8d13-default-rtdb.firebaseio.com",
+    "project_id": "feedwithlove-094f8d13",
+    "storage_bucket": "feedwithlove-094f8d13.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:58004774376:android:f0f3aee8dc8603fd94585d",
+        "android_client_info": {
+          "package_name": "com.example.ttsetawsimage"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPfKZ33tqFdaUAyVVHpYBx9dcPiq_6e7s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:58004774376:android:947d3ead7dd1a4bf94585d",
+        "android_client_info": {
+          "package_name": "com.namah.feedwithlove"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAPfKZ33tqFdaUAyVVHpYBx9dcPiq_6e7s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
