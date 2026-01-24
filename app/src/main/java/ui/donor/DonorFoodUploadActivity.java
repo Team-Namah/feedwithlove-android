@@ -1,9 +1,12 @@
 package ui.donor;
 
+import android.Manifest;
 import android.app.TimePickerDialog;
-import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.location.Address;
+import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -16,127 +19,293 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.SystemBarStyle;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
+import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.mobileconnectors.s3.transferutility.*;
+import com.amazonaws.regions.Region;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.google.android.gms.location.*;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.namah.feedwithlove.FileUtils;
 import com.namah.feedwithlove.R;
 
-import java.util.Calendar;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 public class DonorFoodUploadActivity extends AppCompatActivity {
+
+    private static final int LOCATION_PERMISSION_CODE = 101;
+    private static final int CAMERA_PERMISSION_CODE = 102;
+
+    private double currentLat = 0.0;
+    private double currentLng = 0.0;
 
     private ImageView ivFoodImage;
     private LinearLayout layoutUploadPlaceholder;
     private TextInputEditText etTime, etFoodName, etQuantity, etLocation, etNotes;
-    private MaterialButton btnCapture, btnGallery, btnSubmit;
+    private MaterialButton btnGallery, btnSubmit, btnCapture;
 
-    private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == RESULT_OK && result.getData() != null) {
-                    Bundle extras = result.getData().getExtras();
-                    Bitmap imageBitmap = (Bitmap) extras.get("data");
-                    displayImage(imageBitmap);
-                }
-            }
-    );
+    private Uri imageUri;
+    private DatabaseReference rootRef;
+    private FusedLocationProviderClient fusedLocationClient;
 
-    private final ActivityResultLauncher<String> galleryLauncher = registerForActivityResult(
-            new ActivityResultContracts.GetContent(),
-            uri -> {
+    // 🔐 AWS (MOVE TO local.properties in production)
+    private static final String ACCESS_KEY = "AKIA4RJENHKGLDV6IQHY";
+    private static final String SECRET_KEY = "CS3hqfhzTaLv3buXfaBNvKbfqNKcxgcEHU1v84p";
+    private static final String BUCKET_NAME = "tts-image-upload";
+
+    /* ---------------- GALLERY ---------------- */
+    private final ActivityResultLauncher<String> galleryLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri != null) {
+                    imageUri = uri;
                     ivFoodImage.setImageURI(uri);
                     ivFoodImage.setVisibility(View.VISIBLE);
                     layoutUploadPlaceholder.setVisibility(View.GONE);
                 }
-            }
-    );
+            });
+
+    /* ---------------- CAMERA ---------------- */
+    private final ActivityResultLauncher<Void> cameraLauncher =
+            registerForActivityResult(new ActivityResultContracts.TakePicturePreview(), bitmap -> {
+                if (bitmap != null) {
+                    imageUri = saveBitmap(bitmap);
+                    ivFoodImage.setImageBitmap(bitmap);
+                    ivFoodImage.setVisibility(View.VISIBLE);
+                    layoutUploadPlaceholder.setVisibility(View.GONE);
+                }
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        // Enable fullscreen / edge-to-edge
+
         EdgeToEdge.enable(this,
                 SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-                SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
-        );
-        
+                SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT));
+
         setContentView(R.layout.activity_donor_food_upload);
 
-        // Handle Window Insets to prevent overlapping with status bar and navigation bar
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main_donor_upload), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
+            Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+            v.setPadding(bars.left, bars.top, bars.right, bars.bottom);
             return insets;
         });
 
+        rootRef = FirebaseDatabase.getInstance().getReference();
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
         initViews();
-        setupClickListeners();
+        setupListeners();
     }
 
     private void initViews() {
         ivFoodImage = findViewById(R.id.ivFoodImage);
         layoutUploadPlaceholder = findViewById(R.id.layoutUploadPlaceholder);
-        etTime = findViewById(R.id.etTime);
         etFoodName = findViewById(R.id.etFoodName);
         etQuantity = findViewById(R.id.etQuantity);
         etLocation = findViewById(R.id.etLocation);
+        etTime = findViewById(R.id.etTime);
         etNotes = findViewById(R.id.etNotes);
-        btnCapture = findViewById(R.id.btnCapture);
         btnGallery = findViewById(R.id.btnGallery);
+        btnCapture = findViewById(R.id.btnCapture);
         btnSubmit = findViewById(R.id.btnSubmit);
-        
+
         findViewById(R.id.toolbar).setOnClickListener(v -> finish());
     }
 
-    private void setupClickListeners() {
-        btnCapture.setOnClickListener(v -> {
-            Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            cameraLauncher.launch(takePictureIntent);
-        });
+    private void setupListeners() {
 
         btnGallery.setOnClickListener(v -> galleryLauncher.launch("image/*"));
+
+        btnCapture.setOnClickListener(v -> openCamera());
+
+        etLocation.setOnClickListener(v -> fetchLocation());
 
         etTime.setOnClickListener(v -> showTimePicker());
 
         btnSubmit.setOnClickListener(v -> {
-            if (validateForm()) {
-                Toast.makeText(this, "Donation submitted successfully!", Toast.LENGTH_SHORT).show();
-                finish();
+            if (validate()) createFoodEntry();
+        });
+    }
+
+    /* ---------------- CAMERA LOGIC ---------------- */
+    private void openCamera() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA},
+                    CAMERA_PERMISSION_CODE);
+        } else {
+            cameraLauncher.launch(null);
+        }
+    }
+
+    private Uri saveBitmap(Bitmap bitmap) {
+        try {
+            File file = new File(getCacheDir(), "camera_" + System.currentTimeMillis() + ".jpg");
+            FileOutputStream fos = new FileOutputStream(file);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
+            fos.close();
+            return Uri.fromFile(file);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /* ---------------- LOCATION LOGIC ---------------- */
+    private void fetchLocation() {
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                    LOCATION_PERMISSION_CODE);
+            return;
+        }
+
+        fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
+            if (location != null) {
+
+                currentLat = location.getLatitude();
+                currentLng = location.getLongitude();
+
+                try {
+                    Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+                    List<Address> list = geocoder.getFromLocation(
+                            currentLat,
+                            currentLng,
+                            1
+                    );
+
+                    if (!list.isEmpty()) {
+                        etLocation.setText(list.get(0).getAddressLine(0));
+                    }
+
+                } catch (Exception e) {
+                    toast("Unable to fetch address");
+                }
+            } else {
+                toast("Location not available");
             }
         });
     }
 
+
+    /* ---------------- TIME ---------------- */
     private void showTimePicker() {
-        Calendar mcurrentTime = Calendar.getInstance();
-        int hour = mcurrentTime.get(Calendar.HOUR_OF_DAY);
-        int minute = mcurrentTime.get(Calendar.MINUTE);
-        TimePickerDialog mTimePicker = new TimePickerDialog(this, (timePicker, selectedHour, selectedMinute) -> 
-            etTime.setText(String.format("%02d:%02d", selectedHour, selectedMinute)), hour, minute, true);
-        mTimePicker.setTitle("Select Pickup Time");
-        mTimePicker.show();
+        Calendar c = Calendar.getInstance();
+        new TimePickerDialog(this,
+                (v, h, m) -> etTime.setText(String.format("%02d:%02d", h, m)),
+                c.get(Calendar.HOUR_OF_DAY),
+                c.get(Calendar.MINUTE),
+                true).show();
     }
 
-    private void displayImage(Bitmap bitmap) {
-        ivFoodImage.setImageBitmap(bitmap);
-        ivFoodImage.setVisibility(View.VISIBLE);
-        layoutUploadPlaceholder.setVisibility(View.GONE);
-    }
-
-    private boolean validateForm() {
-        if (etFoodName.getText().toString().trim().isEmpty()) {
-            etFoodName.setError("Required");
-            return false;
-        }
-        if (etLocation.getText().toString().trim().isEmpty()) {
-            etLocation.setError("Required");
-            return false;
-        }
+    /* ---------------- VALIDATION ---------------- */
+    private boolean validate() {
+        if (imageUri == null) return toastFalse("Select image");
+        if (etFoodName.getText().toString().trim().isEmpty()) return error(etFoodName);
+        if (etLocation.getText().toString().trim().isEmpty()) return error(etLocation);
         return true;
+    }
+
+    /* ---------------- FIREBASE + AWS ---------------- */
+    private void createFoodEntry() {
+
+        String foodId = rootRef.child("foods").push().getKey();
+        long now = System.currentTimeMillis();
+
+        Map<String, Object> data = new HashMap<>();
+
+        data.put("basic/title", etFoodName.getText().toString());
+        data.put("basic/description", etNotes.getText().toString());
+        data.put("basic/quantity", etQuantity.getText().toString());
+        data.put("basic/foodType", "VEG");
+        data.put("basic/expiryTime", etTime.getText().toString());
+
+        data.put("location/address", etLocation.getText().toString());
+        data.put("location/latitude", currentLat);
+        data.put("location/longitude", currentLng);
+
+
+        data.put("status/state", "AVAILABLE");
+        data.put("timestamps/createdAt", now);
+        data.put("timestamps/updatedAt", now);
+
+        rootRef.child("foods").child(foodId).updateChildren(data);
+
+        uploadImageToAWS(foodId);
+    }
+
+    private void uploadImageToAWS(String foodId) {
+
+        File file = new File(FileUtils.getPath(this, imageUri));
+
+        AmazonS3Client s3Client = new AmazonS3Client(
+                new BasicAWSCredentials(ACCESS_KEY, SECRET_KEY));
+        s3Client.setRegion(Region.getRegion(Regions.AP_SOUTH_1));
+
+        TransferUtility transferUtility = TransferUtility.builder()
+                .context(this)
+                .s3Client(s3Client)
+                .build();
+
+        String fileName = foodId + "_" + UUID.randomUUID() + ".jpg";
+
+        TransferObserver observer =
+                transferUtility.upload(BUCKET_NAME, fileName, file);
+
+        observer.setTransferListener(new TransferListener() {
+            @Override
+            public void onStateChanged(int id, TransferState state) {
+                if (state == TransferState.COMPLETED) {
+
+                    String imageUrl =
+                            "https://" + BUCKET_NAME +
+                                    ".s3.ap-south-1.amazonaws.com/" + fileName;
+
+                    rootRef.child("foods")
+                            .child(foodId)
+                            .child("basic")
+                            .child("imageUrl")
+                            .setValue(imageUrl);
+
+                    toast("Food uploaded successfully");
+                    finish();
+                }
+            }
+            @Override public void onProgressChanged(int id, long b, long t) {}
+            @Override public void onError(int id, Exception ex) { toast(ex.getMessage()); }
+        });
+    }
+
+    /* ---------------- HELPERS ---------------- */
+    private boolean toastFalse(String m) { toast(m); return false; }
+    private boolean error(TextInputEditText e) { e.setError("Required"); return false; }
+    private void toast(String m) { Toast.makeText(this, m, Toast.LENGTH_SHORT).show(); }
+
+    /* ---------------- PERMISSIONS ---------------- */
+    @Override
+    public void onRequestPermissionsResult(int code, @NonNull String[] p, @NonNull int[] r) {
+        super.onRequestPermissionsResult(code, p, r);
+        if (code == CAMERA_PERMISSION_CODE && r.length > 0 && r[0] == PackageManager.PERMISSION_GRANTED)
+            openCamera();
+        if (code == LOCATION_PERMISSION_CODE && r.length > 0 && r[0] == PackageManager.PERMISSION_GRANTED)
+            fetchLocation();
     }
 }
