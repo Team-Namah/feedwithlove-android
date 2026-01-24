@@ -44,11 +44,12 @@ public class EditDonorProfileActivity extends AppCompatActivity {
     private EditText etName, etEmail;
     private ImageView ivEditAvatar;
 
-    private static final String BUCKET_NAME = "vitals-user-profiles";
+    // ✅ MUST MATCH YOUR REAL BUCKET
+    private static final String BUCKET_NAME = "feed-profile-images";
     private static final Regions REGION = Regions.AP_SOUTH_1;
 
     private String profileImageUrl;
-    private Uri selectedImageUri; // ✅ NEW (important)
+    private Uri selectedImageUri;
 
     private ActivityResultLauncher<String> imagePickerLauncher;
 
@@ -69,7 +70,6 @@ public class EditDonorProfileActivity extends AppCompatActivity {
 
         findViewById(R.id.btnBack).setOnClickListener(v -> finish());
 
-        // 🔥 SAVE BUTTON CONTROLS EVERYTHING
         findViewById(R.id.btnSave).setOnClickListener(v -> {
             if (selectedImageUri != null) {
                 uploadImageToS3(selectedImageUri);
@@ -80,14 +80,12 @@ public class EditDonorProfileActivity extends AppCompatActivity {
 
         findViewById(R.id.clAvatarContainer).setOnClickListener(v -> openImagePicker());
 
-        // ✅ IMAGE PICKER → PREVIEW ONLY
         imagePickerLauncher =
                 registerForActivityResult(
                         new ActivityResultContracts.GetContent(),
                         uri -> {
                             if (uri != null) {
                                 selectedImageUri = uri;
-
                                 Picasso.get()
                                         .load(uri)
                                         .placeholder(R.drawable.bg_splash)
@@ -106,8 +104,6 @@ public class EditDonorProfileActivity extends AppCompatActivity {
         imagePickerLauncher.launch("image/*");
     }
 
-    // ================= LOAD PROFILE =================
-
     private void loadCurrentDetails() {
         CognitoUserPool userPool = CognitoManager.getUserPool(this);
         CognitoUser user = userPool.getCurrentUser();
@@ -116,9 +112,7 @@ public class EditDonorProfileActivity extends AppCompatActivity {
         user.getDetailsInBackground(new GetDetailsHandler() {
             @Override
             public void onSuccess(CognitoUserDetails details) {
-                Map<String, String> attrs =
-                        details.getAttributes().getAttributes();
-
+                Map<String, String> attrs = details.getAttributes().getAttributes();
                 runOnUiThread(() -> {
                     etName.setText(attrs.get("name"));
                     etEmail.setText(attrs.get("email"));
@@ -131,8 +125,7 @@ public class EditDonorProfileActivity extends AppCompatActivity {
             public void onFailure(Exception exception) {
                 runOnUiThread(() ->
                         Toast.makeText(EditDonorProfileActivity.this,
-                                "Failed to load profile",
-                                Toast.LENGTH_SHORT).show());
+                                "Failed to load profile", Toast.LENGTH_SHORT).show());
             }
         });
     }
@@ -151,8 +144,6 @@ public class EditDonorProfileActivity extends AppCompatActivity {
                 .centerCrop()
                 .into(ivEditAvatar);
     }
-
-    // ================= S3 UPLOAD (ONLY ON SAVE) =================
 
     private void uploadImageToS3(Uri imageUri) {
 
@@ -199,13 +190,10 @@ public class EditDonorProfileActivity extends AppCompatActivity {
             public void onError(int id, Exception ex) {
                 runOnUiThread(() ->
                         Toast.makeText(EditDonorProfileActivity.this,
-                                "Upload failed",
-                                Toast.LENGTH_SHORT).show());
+                                "Upload failed", Toast.LENGTH_SHORT).show());
             }
         });
     }
-
-    // ================= UPDATE COGNITO IMAGE =================
 
     private void updateProfilePictureAttribute(String url) {
         CognitoUser user =
@@ -219,9 +207,8 @@ public class EditDonorProfileActivity extends AppCompatActivity {
             @Override
             public void onSuccess(List list) {
                 runOnUiThread(() -> {
-                    profileImageUrl = url;
                     selectedImageUri = null;
-                    saveProfileTextOnly(); // 🔥 continue save flow
+                    saveProfileTextOnly();
                 });
             }
 
@@ -229,13 +216,10 @@ public class EditDonorProfileActivity extends AppCompatActivity {
             public void onFailure(Exception exception) {
                 runOnUiThread(() ->
                         Toast.makeText(EditDonorProfileActivity.this,
-                                "Failed to update picture",
-                                Toast.LENGTH_SHORT).show());
+                                "Failed to update picture", Toast.LENGTH_SHORT).show());
             }
         });
     }
-
-    // ================= SAVE NAME & EMAIL =================
 
     private void saveProfileTextOnly() {
         hideKeyboard();
@@ -253,8 +237,7 @@ public class EditDonorProfileActivity extends AppCompatActivity {
             public void onSuccess(List list) {
                 runOnUiThread(() -> {
                     Toast.makeText(EditDonorProfileActivity.this,
-                            "Profile updated",
-                            Toast.LENGTH_SHORT).show();
+                            "Profile updated", Toast.LENGTH_SHORT).show();
                     finish();
                 });
             }
@@ -263,13 +246,10 @@ public class EditDonorProfileActivity extends AppCompatActivity {
             public void onFailure(Exception exception) {
                 runOnUiThread(() ->
                         Toast.makeText(EditDonorProfileActivity.this,
-                                "Update failed",
-                                Toast.LENGTH_SHORT).show());
+                                "Update failed", Toast.LENGTH_SHORT).show());
             }
         });
     }
-
-    // ================= UTIL =================
 
     private File createTempFileFromUri(Uri uri) {
         try {

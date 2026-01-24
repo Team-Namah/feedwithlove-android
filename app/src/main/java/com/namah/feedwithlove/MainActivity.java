@@ -1,24 +1,38 @@
 package com.namah.feedwithlove;
 
 import android.os.Bundle;
+import android.util.Log;
 
-import androidx.activity.EdgeToEdge;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.graphics.Insets;
-import androidx.core.view.ViewCompat;
-import androidx.core.view.WindowInsetsCompat;
+
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.UserStateDetails;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferNetworkLossHandler;
 
 public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
-        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.main), (v, insets) -> {
-            Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
-            return insets;
-        });
+
+        AWSMobileClient.getInstance().initialize(
+                getApplicationContext(),
+                new Callback<UserStateDetails>() {
+                    @Override
+                    public void onResult(UserStateDetails result) {
+                        Log.d("AWS", "AWSMobileClient initialized: " + result.getUserState());
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Log.e("AWS", "AWS init error", e);
+                    }
+                }
+        );
+
+        // ✅ REQUIRED for S3 TransferUtility
+        TransferNetworkLossHandler.getInstance(getApplicationContext());
     }
 }
