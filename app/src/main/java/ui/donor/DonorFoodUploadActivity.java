@@ -9,7 +9,6 @@ import android.location.Address;
 import android.location.Geocoder;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -28,11 +27,16 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.mobileconnectors.s3.transferutility.*;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferNetworkLossHandler;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3Client;
-import com.google.android.gms.location.*;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.firebase.database.DatabaseReference;
@@ -42,8 +46,12 @@ import com.namah.feedwithlove.R;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.UUID;
 
 public class DonorFoodUploadActivity extends AppCompatActivity {
 
@@ -62,9 +70,9 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
     private DatabaseReference rootRef;
     private FusedLocationProviderClient fusedLocationClient;
 
-    // 🔐 AWS (MOVE TO local.properties in production)
-    private static final String ACCESS_KEY = "AKIA4RJENHKGLDV6IQHY";
-    private static final String SECRET_KEY = "CS3hqfhzTaLv3buXfaBNvKbfqNKcxgcEHU1v84p";
+    // 🔴 AWS DETAILS (TESTING ONLY)
+    private static final String ACCESS_KEY = "AKIA4RJENHKGARX4UHX4";
+    private static final String SECRET_KEY = "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";
     private static final String BUCKET_NAME = "tts-image-upload";
 
     /* ---------------- GALLERY ---------------- */
@@ -128,21 +136,16 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-
         btnGallery.setOnClickListener(v -> galleryLauncher.launch("image/*"));
-
         btnCapture.setOnClickListener(v -> openCamera());
-
         etLocation.setOnClickListener(v -> fetchLocation());
-
         etTime.setOnClickListener(v -> showTimePicker());
-
         btnSubmit.setOnClickListener(v -> {
             if (validate()) createFoodEntry();
         });
     }
 
-    /* ---------------- CAMERA LOGIC ---------------- */
+    /* ---------------- CAMERA ---------------- */
     private void openCamera() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
                 != PackageManager.PERMISSION_GRANTED) {
@@ -156,7 +159,8 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
 
     private Uri saveBitmap(Bitmap bitmap) {
         try {
-            File file = new File(getCacheDir(), "camera_" + System.currentTimeMillis() + ".jpg");
+            File file = new File(getCacheDir(),
+                    "camera_" + System.currentTimeMillis() + ".jpg");
             FileOutputStream fos = new FileOutputStream(file);
             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, fos);
             fos.close();
@@ -165,11 +169,30 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
             return null;
         }
     }
+    private File getFileFromUri(Uri uri) {
+        try {
+            File file = new File(getCacheDir(),
+                    "upload_" + System.currentTimeMillis() + ".jpg");
 
-    /* ---------------- LOCATION LOGIC ---------------- */
+            try (java.io.InputStream in = getContentResolver().openInputStream(uri);
+                 java.io.OutputStream out = new java.io.FileOutputStream(file)) {
+
+                byte[] buf = new byte[1024];
+                int len;
+                while ((len = in.read(buf)) > 0) {
+                    out.write(buf, 0, len);
+                }
+            }
+            return file;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    /* ---------------- LOCATION ---------------- */
     private void fetchLocation() {
-
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
 
             ActivityCompat.requestPermissions(this,
@@ -180,31 +203,20 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
 
         fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
             if (location != null) {
-
                 currentLat = location.getLatitude();
                 currentLng = location.getLongitude();
-
                 try {
                     Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-                    List<Address> list = geocoder.getFromLocation(
-                            currentLat,
-                            currentLng,
-                            1
-                    );
-
-                    if (!list.isEmpty()) {
+                    List<Address> list =
+                            geocoder.getFromLocation(currentLat, currentLng, 1);
+                    if (!list.isEmpty())
                         etLocation.setText(list.get(0).getAddressLine(0));
-                    }
-
                 } catch (Exception e) {
                     toast("Unable to fetch address");
                 }
-            } else {
-                toast("Location not available");
             }
         });
     }
-
 
     /* ---------------- TIME ---------------- */
     private void showTimePicker() {
@@ -219,8 +231,10 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
     /* ---------------- VALIDATION ---------------- */
     private boolean validate() {
         if (imageUri == null) return toastFalse("Select image");
-        if (etFoodName.getText().toString().trim().isEmpty()) return error(etFoodName);
-        if (etLocation.getText().toString().trim().isEmpty()) return error(etLocation);
+        if (etFoodName.getText().toString().trim().isEmpty())
+            return error(etFoodName);
+        if (etLocation.getText().toString().trim().isEmpty())
+            return error(etLocation);
         return true;
     }
 
@@ -242,7 +256,6 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
         data.put("location/latitude", currentLat);
         data.put("location/longitude", currentLng);
 
-
         data.put("status/state", "AVAILABLE");
         data.put("timestamps/createdAt", now);
         data.put("timestamps/updatedAt", now);
@@ -254,11 +267,19 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
 
     private void uploadImageToAWS(String foodId) {
 
-        File file = new File(FileUtils.getPath(this, imageUri));
+        File file = getFileFromUri(imageUri);
+        if (file == null) {
+            toast("Image processing failed");
+            return;
+        }
 
-        AmazonS3Client s3Client = new AmazonS3Client(
-                new BasicAWSCredentials(ACCESS_KEY, SECRET_KEY));
+        BasicAWSCredentials credentials =
+                new BasicAWSCredentials(ACCESS_KEY, SECRET_KEY);
+
+        AmazonS3Client s3Client = new AmazonS3Client(credentials);
         s3Client.setRegion(Region.getRegion(Regions.AP_SOUTH_1));
+
+        TransferNetworkLossHandler.getInstance(this);
 
         TransferUtility transferUtility = TransferUtility.builder()
                 .context(this)
@@ -277,7 +298,8 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
 
                     String imageUrl =
                             "https://" + BUCKET_NAME +
-                                    ".s3.ap-south-1.amazonaws.com/" + fileName;
+                                    ".s3.ap-south-1.amazonaws.com/" +
+                                    fileName;
 
                     rootRef.child("foods")
                             .child(foodId)
@@ -289,23 +311,32 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
                     finish();
                 }
             }
+
             @Override public void onProgressChanged(int id, long b, long t) {}
-            @Override public void onError(int id, Exception ex) { toast(ex.getMessage()); }
+            @Override public void onError(int id, Exception ex) {
+                toast(ex.getMessage());
+            }
         });
     }
+
 
     /* ---------------- HELPERS ---------------- */
     private boolean toastFalse(String m) { toast(m); return false; }
     private boolean error(TextInputEditText e) { e.setError("Required"); return false; }
-    private void toast(String m) { Toast.makeText(this, m, Toast.LENGTH_SHORT).show(); }
+    private void toast(String m) {
+        Toast.makeText(this, m, Toast.LENGTH_SHORT).show();
+    }
 
     /* ---------------- PERMISSIONS ---------------- */
     @Override
-    public void onRequestPermissionsResult(int code, @NonNull String[] p, @NonNull int[] r) {
+    public void onRequestPermissionsResult(
+            int code, @NonNull String[] p, @NonNull int[] r) {
         super.onRequestPermissionsResult(code, p, r);
-        if (code == CAMERA_PERMISSION_CODE && r.length > 0 && r[0] == PackageManager.PERMISSION_GRANTED)
+        if (code == CAMERA_PERMISSION_CODE && r.length > 0 &&
+                r[0] == PackageManager.PERMISSION_GRANTED)
             openCamera();
-        if (code == LOCATION_PERMISSION_CODE && r.length > 0 && r[0] == PackageManager.PERMISSION_GRANTED)
+        if (code == LOCATION_PERMISSION_CODE && r.length > 0 &&
+                r[0] == PackageManager.PERMISSION_GRANTED)
             fetchLocation();
     }
 }
