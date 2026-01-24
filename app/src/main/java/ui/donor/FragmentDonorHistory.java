@@ -1,12 +1,10 @@
 package ui.donor;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,21 +12,32 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.namah.feedwithlove.R;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class FragmentDonorHistory extends Fragment {
 
     private RecyclerView rvHistory;
+    private ChipGroup chipGroupFilters;
     private DonationHistoryAdapter adapter;
+    private final List<DonationHistoryItemModel> allItems = new ArrayList<>();
 
-    public FragmentDonorHistory() {
-        // Required empty public constructor
-    }
+    private DatabaseReference foodsRef;
+
+    // 🔥 IMPORTANT: track current selected filter
+    private String currentFilter = "All";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -41,134 +50,111 @@ public class FragmentDonorHistory extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         rvHistory = view.findViewById(R.id.rvHistory);
+        chipGroupFilters = view.findViewById(R.id.chipGroupFilters);
+
         rvHistory.setLayoutManager(new LinearLayoutManager(getContext()));
-
-        setupSampleData();
-    }
-
-    private void setupSampleData() {
-        List<DonationHistoryItemModel> samples = new ArrayList<>();
-        samples.add(new DonationHistoryItemModel("Fresh Meal Boxes", "Oct 24, 2023 • 02:30 PM", "123 Heart Street, Community Center", "COMPLETED", "Alex Thompson"));
-        samples.add(new DonationHistoryItemModel("Baked Breads", "Oct 25, 2023 • 11:00 AM", "456 Hope Avenue, Shelter A", "PENDING", "Sarah Jenkins"));
-        samples.add(new DonationHistoryItemModel("Fruit Baskets", "Oct 26, 2023 • 04:45 PM", "789 Kindness Blvd, Orphanage Home", "COMPLETED", "Michael Ross"));
-        samples.add(new DonationHistoryItemModel("Vegetable Soup", "Oct 27, 2023 • 12:15 PM", "321 Love Rd, Senior Living", "COMPLETED", "Emma Watson"));
-
-        adapter = new DonationHistoryAdapter(samples, item -> showDonationDetails(item));
+        adapter = new DonationHistoryAdapter(new ArrayList<>());
         rvHistory.setAdapter(adapter);
-    }
 
-    private void showDonationDetails(DonationHistoryItemModel item) {
-        if (getContext() == null) return;
+        foodsRef = FirebaseDatabase.getInstance().getReference("foods");
 
-        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(getContext(), R.style.BottomSheetDialogTheme);
-        View bottomSheetView = LayoutInflater.from(getContext()).inflate(
-                R.layout.layout_donation_details_bottom_sheet,
-                null
-        );
+        loadData();
 
-        TextView tvTitle = bottomSheetView.findViewById(R.id.tvDetailFoodName);
-        TextView tvLocation = bottomSheetView.findViewById(R.id.tvDetailLocation);
-        TextView tvDateTime = bottomSheetView.findViewById(R.id.tvDetailDateTime);
-        TextView tvVolunteer = bottomSheetView.findViewById(R.id.tvVolunteerName);
-        TextView tvStatus = bottomSheetView.findViewById(R.id.tvDetailStatus);
+        // 🔥 Chip selection listener (STORE current filter)
+        chipGroupFilters.setOnCheckedChangeListener((group, checkedId) -> {
 
-        tvTitle.setText(item.getFoodName());
-        tvLocation.setText(item.getLocation());
-        tvDateTime.setText(item.getDateTime());
-        tvVolunteer.setText(item.getVolunteerName());
-        tvStatus.setText(item.getStatus());
+            updateChipUI(checkedId);
 
-        if ("PENDING".equalsIgnoreCase(item.getStatus())) {
-            tvStatus.setTextColor(getResources().getColor(android.R.color.holo_orange_dark));
-        } else {
-            tvStatus.setTextColor(getResources().getColor(android.R.color.holo_green_dark));
-        }
-
-        bottomSheetDialog.setContentView(bottomSheetView);
-
-        // Force the BottomSheet to open fully (STATE_EXPANDED)
-        bottomSheetDialog.setOnShowListener(dialog -> {
-            BottomSheetDialog d = (BottomSheetDialog) dialog;
-            FrameLayout bottomSheet = d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
-            if (bottomSheet != null) {
-                BottomSheetBehavior.from(bottomSheet).setState(BottomSheetBehavior.STATE_EXPANDED);
-                BottomSheetBehavior.from(bottomSheet).setSkipCollapsed(true);
+            Chip chip = group.findViewById(checkedId);
+            if (chip != null) {
+                currentFilter = chip.getText().toString(); // ✅ SAVE
+                filter(currentFilter);
             }
         });
 
-        bottomSheetDialog.show();
+        // Default selected chip (All)
+        if (chipGroupFilters.getChildCount() > 0) {
+            Chip defaultChip = (Chip) chipGroupFilters.getChildAt(0);
+            defaultChip.setChecked(true);
+            currentFilter = defaultChip.getText().toString();
+            updateChipUI(defaultChip.getId());
+        }
     }
 
-    // --- Static Inner Model Class ---
-    public static class DonationHistoryItemModel {
-        private String foodName;
-        private String dateTime;
-        private String location;
-        private String status;
-        private String volunteerName;
+    /* ---------------- FIREBASE LOAD ---------------- */
+    private void loadData() {
+        foodsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
 
-        public DonationHistoryItemModel(String foodName, String dateTime, String location, String status, String volunteerName) {
-            this.foodName = foodName;
-            this.dateTime = dateTime;
-            this.location = location;
-            this.status = status;
-            this.volunteerName = volunteerName;
-        }
+                allItems.clear();
 
-        public String getFoodName() { return foodName; }
-        public String getDateTime() { return dateTime; }
-        public String getLocation() { return location; }
-        public String getStatus() { return status; }
-        public String getVolunteerName() { return volunteerName; }
+                for (DataSnapshot snap : snapshot.getChildren()) {
+
+                    String title = snap.child("basic/title").getValue(String.class);
+                    String imageUrl = snap.child("basic/imageUrl").getValue(String.class);
+                    String address = snap.child("location/address").getValue(String.class);
+                    String delivery = snap.child("status/delivery").getValue(String.class);
+                    Long time = snap.child("timestamps/createdAt").getValue(Long.class);
+
+                    allItems.add(new DonationHistoryItemModel(
+                            title,
+                            formatTime(time),
+                            address,
+                            delivery == null ? "PENDING" : delivery.toUpperCase(),
+                            imageUrl
+                    ));
+                }
+
+                // 🔥 APPLY CURRENT FILTER, NOT "All"
+                filter(currentFilter);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) { }
+        });
     }
 
-    // --- Static Inner Adapter Class ---
-    public static class DonationHistoryAdapter extends RecyclerView.Adapter<DonationHistoryAdapter.ViewHolder> {
+    /* ---------------- CHIP UI COLOR ---------------- */
+    private void updateChipUI(int selectedChipId) {
 
-        private List<DonationHistoryItemModel> donationList;
-        private OnItemClickListener listener;
+        for (int i = 0; i < chipGroupFilters.getChildCount(); i++) {
 
-        public interface OnItemClickListener {
-            void onItemClick(DonationHistoryItemModel item);
-        }
+            Chip chip = (Chip) chipGroupFilters.getChildAt(i);
 
-        public DonationHistoryAdapter(List<DonationHistoryItemModel> donationList, OnItemClickListener listener) {
-            this.donationList = donationList;
-            this.listener = listener;
-        }
-
-        @NonNull
-        @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_donation_history, parent, false);
-            return new ViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            DonationHistoryItemModel item = donationList.get(position);
-            holder.tvFoodName.setText(item.getFoodName());
-            holder.tvDateTime.setText(item.getDateTime());
-            holder.tvLocation.setText(item.getLocation());
-            holder.itemView.setOnClickListener(v -> listener.onItemClick(item));
-        }
-
-        @Override
-        public int getItemCount() {
-            return donationList.size();
-        }
-
-        public static class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvFoodName, tvDateTime, tvLocation;
-            ImageView ivFoodImage;
-
-            public ViewHolder(@NonNull View itemView) {
-                super(itemView);
-                tvFoodName = itemView.findViewById(R.id.tvFoodName);
-                tvDateTime = itemView.findViewById(R.id.tvDateTime);
-                tvLocation = itemView.findViewById(R.id.tvLocation);
-                ivFoodImage = itemView.findViewById(R.id.ivFoodImage);
+            if (chip.getId() == selectedChipId) {
+                chip.setChipBackgroundColorResource(R.color.love_primary);
+                chip.setTextColor(Color.WHITE);
+            } else {
+                chip.setChipBackgroundColorResource(R.color.white);
+                chip.setTextColor(
+                        getResources().getColor(R.color.love_text_deep)
+                );
             }
         }
+    }
+
+    /* ---------------- FILTER ---------------- */
+    private void filter(String type) {
+        List<DonationHistoryItemModel> filtered = new ArrayList<>();
+
+        for (DonationHistoryItemModel item : allItems) {
+            if ("All".equalsIgnoreCase(type)) {
+                filtered.add(item);
+            } else if (item.getDeliveryStatus().equalsIgnoreCase(type)) {
+                filtered.add(item);
+            }
+        }
+
+        adapter.updateList(filtered);
+    }
+
+    /* ---------------- TIME FORMAT ---------------- */
+    private String formatTime(Long t) {
+        if (t == null) return "";
+        return new SimpleDateFormat(
+                "dd MMM yyyy • hh:mm a",
+                Locale.getDefault()
+        ).format(new Date(t));
     }
 }

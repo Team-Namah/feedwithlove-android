@@ -56,6 +56,8 @@ dependencies {
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
 
+    implementation("com.github.bumptech.glide:glide:4.16.0")
+    annotationProcessor("com.github.bumptech.glide:compiler:4.16.0")
     implementation("com.amazonaws:aws-android-sdk-core:2.81.1")
     implementation("com.amazonaws:aws-android-sdk-cognitoidentityprovider:2.81.1")
     implementation("com.amazonaws:aws-android-sdk-mobile-client:2.74.0")
