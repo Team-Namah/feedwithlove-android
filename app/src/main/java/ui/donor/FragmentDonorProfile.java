@@ -18,6 +18,7 @@ import androidx.fragment.app.Fragment;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
+import com.google.android.material.chip.Chip;
 import com.namah.feedwithlove.LoginActivity;
 import com.namah.feedwithlove.R;
 import com.ncorti.slidetoact.SlideToActView;
@@ -51,9 +52,9 @@ public class FragmentDonorProfile extends Fragment {
         layoutSafetyRulesOverlay = view.findViewById(R.id.layoutSafetyRulesOverlay);
 
         // Edit Profile
-//        view.findViewById(R.id.editProfileInfo).setOnClickListener(v ->
-//                startActivity(new Intent(requireActivity(), EditProfileActivity.class))
-//        );
+        view.findViewById(R.id.editProfileInfo).setOnClickListener(v ->
+                startActivity(new Intent(requireActivity(), EditDonorProfileActivity.class))
+        );
 
         // Safety Rules Show/Hide
         view.findViewById(R.id.chipSafetyRules).setOnClickListener(v -> {

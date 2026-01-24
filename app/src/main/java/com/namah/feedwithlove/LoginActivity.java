@@ -145,10 +145,11 @@ public class LoginActivity extends AppCompatActivity {
                             public void onError(Exception e) {
                                 Log.e("AWS_ATTRS", "Failed to fetch role: " + e.getMessage());
                                 // Fallback: Go to Dashboard anyway if attributes fail
-                                runOnUiThread(() -> {
-                                    startActivity(new Intent(LoginActivity.this, DashboardActivity.class));
-                                    finish();
-                                });
+//                                runOnUiThread(() -> {
+//                                    startActivity(new Intent(LoginActivity.this, DashboardActivity.class));
+//                                    finish();
+//                                });
+                                Toast.makeText(LoginActivity.this, "Role does not found", Toast.LENGTH_SHORT).show();
                             }
                         });
                     }

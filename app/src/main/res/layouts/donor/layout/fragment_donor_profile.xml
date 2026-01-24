@@ -205,8 +205,8 @@
                         android:text="Verified Role"
                         android:textColor="#666666"
                         android:textSize="12sp"
-                        app:layout_constraintStart_toStartOf="@id/tvBloodType"
-                        app:layout_constraintTop_toBottomOf="@id/tvBloodType" />
+                        app:layout_constraintStart_toStartOf="@id/tvRoleType"
+                        app:layout_constraintTop_toBottomOf="@id/tvRoleType" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>

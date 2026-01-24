@@ -16,4 +16,8 @@
     <style name="AppTheme.GenderChip" parent="TextAppearance.MaterialComponents.Chip">
         <item name="fontFamily">@font/moniqa_black_paragraph</item>
     </style>
+    <style name="AppTheme.MaterialToolbar" parent="TextAppearance.Material3.ActionBar.Title">
+        <item name="fontFamily">@font/moniqa_black_paragraph</item>
+        <item name="android:letterSpacing">0.03</item>
+    </style>
 </resources>

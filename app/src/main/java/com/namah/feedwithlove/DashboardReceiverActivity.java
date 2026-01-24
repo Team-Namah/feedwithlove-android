@@ -35,7 +35,7 @@ public class DashboardReceiverActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        setContentView(R.layout.activity_dashboard);
+        setContentView(R.layout.activity_dashboard_receiver);
         // Enable fullscreen / edge-to-edge
         EdgeToEdge.enable(this,
                 SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),

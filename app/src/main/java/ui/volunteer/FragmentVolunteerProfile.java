@@ -1,66 +1,157 @@
 package ui.volunteer;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.client.Callback;
+import com.namah.feedwithlove.LoginActivity;
 import com.namah.feedwithlove.R;
+import com.ncorti.slidetoact.SlideToActView;
+import com.squareup.picasso.Picasso;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link FragmentVolunteerProfile#newInstance} factory method to
- * create an instance of this fragment.
- */
+import java.util.Map;
+
 public class FragmentVolunteerProfile extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private TextView tvProfileName, tvEmail, tvRoleType;
+    private SlideToActView swipeLogout;
+    private ImageView ivProfileAvatar;
+    private View layoutSafetyRulesOverlay;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    @SuppressLint("MissingInflatedId")
+    @Nullable
+    @Override
+    public View onCreateView(
+            @NonNull LayoutInflater inflater,
+            @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState
+    ) {
+        View view = inflater.inflate(R.layout.fragment_volunteer_profile, container, false);
 
-    public FragmentVolunteerProfile() {
-        // Required empty public constructor
-    }
+        // Views
+        tvProfileName = view.findViewById(R.id.tvProfileName);
+        tvEmail = view.findViewById(R.id.tvEmail);
+        tvRoleType = view.findViewById(R.id.tvRoleType);
+        swipeLogout = view.findViewById(R.id.swipeLogout);
+        ivProfileAvatar = view.findViewById(R.id.ivUserAvatar);
+        layoutSafetyRulesOverlay = view.findViewById(R.id.layoutSafetyRulesOverlay);
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment FragmentVolunteerProfile.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static FragmentVolunteerProfile newInstance(String param1, String param2) {
-        FragmentVolunteerProfile fragment = new FragmentVolunteerProfile();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
+        // Edit Profile
+//        view.findViewById(R.id.editProfileInfo).setOnClickListener(v ->
+//                startActivity(new Intent(requireActivity(), EditProfileActivity.class))
+//        );
+
+        // Safety Rules Show/Hide
+        view.findViewById(R.id.chipSafetyRules).setOnClickListener(v -> {
+            layoutSafetyRulesOverlay.setVisibility(View.VISIBLE);
+            layoutSafetyRulesOverlay.setAlpha(0f);
+            layoutSafetyRulesOverlay.animate().alpha(1f).setDuration(300).start();
+        });
+
+        view.findViewById(R.id.btnCloseSafety).setOnClickListener(v -> {
+            layoutSafetyRulesOverlay.animate().alpha(0f).setDuration(300).withEndAction(() ->
+                    layoutSafetyRulesOverlay.setVisibility(View.GONE)
+            ).start();
+        });
+
+        setupLogout();
+        loadUserDetails();
+
+        return view;
     }
 
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
-        }
+    public void onResume() {
+        super.onResume();
+        loadUserDetails(); // 🔁 refresh profile every time
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_volunteer_profile, container, false);
+
+    // ================= LOAD USER DETAILS =================
+
+    private void loadUserDetails() {
+
+        if (!AWSMobileClient.getInstance().isSignedIn()) return;
+
+        AWSMobileClient.getInstance().getUserAttributes(
+                new Callback<Map<String, String>>() {
+                    @Override
+                    public void onResult(Map<String, String> attributes) {
+                        if (!isAdded()) return;
+
+                        requireActivity().runOnUiThread(() -> {
+
+                            String name = attributes.get("name");
+                            String email = attributes.get("email");
+                            String profileImageUrl = attributes.get("picture");
+                            String role = attributes.get("custom:role");
+
+                            if (name != null) tvProfileName.setText(name.toUpperCase());
+                            if (email != null) tvEmail.setText(email);
+
+                            if (profileImageUrl != null && !profileImageUrl.isEmpty()) {
+                                Picasso.get()
+                                        .load(profileImageUrl)
+                                        .placeholder(R.drawable.bg_splash)
+                                        .error(R.drawable.bg_splash)
+                                        .fit()
+                                        .centerCrop()
+                                        .into(ivProfileAvatar);
+                            } else {
+                                ivProfileAvatar.setImageResource(R.drawable.bg_splash);
+                            }
+
+                            if (role != null) tvRoleType.setText(role.toUpperCase());
+                        });
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        if (!isAdded()) return;
+                        requireActivity().runOnUiThread(() ->
+                                Toast.makeText(getContext(),
+                                        "Failed to load profile",
+                                        Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                }
+        );
+    }
+
+    // ================= LOGOUT =================
+
+    private void setupLogout() {
+        swipeLogout.setOnSlideCompleteListener(view -> {
+
+            // 🔒 Safe sign out
+            if (AWSMobileClient.getInstance().isSignedIn()) {
+                AWSMobileClient.getInstance().signOut();
+            }
+
+            // Clear login state
+            SharedPreferences prefs =
+                    requireActivity().getSharedPreferences("auth", Context.MODE_PRIVATE);
+            prefs.edit().putBoolean("isLoggedIn", false).apply();
+
+            // Redirect to Login
+            Intent intent = new Intent(requireActivity(), LoginActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+            requireActivity().finish();
+        });
     }
 }
