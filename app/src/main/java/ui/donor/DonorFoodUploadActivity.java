@@ -257,6 +257,7 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
         data.put("location/longitude", currentLng);
 
         data.put("status/state", "AVAILABLE");
+        data.put("status/delivery", "pending");
         data.put("timestamps/createdAt", now);
         data.put("timestamps/updatedAt", now);
 
