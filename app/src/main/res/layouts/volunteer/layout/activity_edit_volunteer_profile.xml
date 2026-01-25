@@ -1,0 +1,227 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_vertical_gradient"
+    android:paddingHorizontal="24dp"
+    tools:context="ui.volunteer.EditVolunteerProfileActivity">
+
+    <!-- Header Section -->
+    <ImageView
+        android:id="@+id/btnBack"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="60dp"
+        android:background="@drawable/bg_glass_card"
+        android:padding="12dp"
+        android:src="@drawable/ic_back_chevron"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:tint="@color/love_text_deep" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="@font/moniqa_black_paragraph"
+        android:letterSpacing="0.1"
+        android:text="EDIT PROFILE"
+        android:textColor="@color/black"
+        android:textSize="22sp"
+        app:layout_constraintBottom_toBottomOf="@id/btnBack"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@id/btnBack" />
+
+    <!-- Profile Image Edit Section -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/clAvatarContainer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/btnBack">
+
+        <!-- Changed ShapeableImageView to ImageView for Picasso integration with custom transformation if needed -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/ivEditAvatarLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:cardCornerRadius="80dp"
+            app:strokeColor="@color/white"
+            app:strokeWidth="2dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" >
+
+            <ImageView
+                android:id="@+id/ivEditAvatar"
+                android:layout_width="120dp"
+                android:layout_height="120dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/ic_launcher_background"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/icEditProfilePic"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            app:cardBackgroundColor="@color/love_text_deep"
+            app:cardCornerRadius="18dp"
+            app:cardElevation="4dp"
+            app:layout_constraintBottom_toBottomOf="@id/ivEditAvatarLayout"
+            app:layout_constraintEnd_toEndOf="@id/ivEditAvatarLayout">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_edit_svg"
+                app:tint="@color/love_surface" />
+        </com.google.android.material.card.MaterialCardView>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Inputs Container (Glass Card) -->
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        app:cardBackgroundColor="@android:color/transparent"
+        app:cardCornerRadius="32dp"
+        app:cardElevation="0dp"
+        app:layout_constraintTop_toBottomOf="@id/clAvatarContainer">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_glass_card"
+            android:orientation="vertical"
+            android:padding="24dp">
+
+            <!-- Full Name Input -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.2"
+                android:text="FULL NAME"
+                android:textColor="#888888"
+                android:textSize="10sp" />
+
+            <EditText
+                android:id="@+id/etName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:ellipsize="end"
+                android:fontFamily="@font/moniqa_black_paragraph"
+                android:inputType="textPersonName"
+                android:maxLines="1"
+                android:paddingVertical="12dp"
+                android:singleLine="true"
+                android:text="Jason Brooks"
+                android:textColor="@color/love_text_deep"
+                android:textSize="18sp"
+                android:letterSpacing="0.03"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="20dp"
+                android:background="#1A000000" />
+
+            <!-- Email ID Input -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.2"
+                android:text="EMAIL ID"
+                android:textColor="#888888"
+                android:textSize="10sp"
+                android:visibility="gone"/>
+
+            <EditText
+                android:id="@+id/etEmail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@null"
+                android:ellipsize="end"
+                android:fontFamily="@font/moniqa_black_paragraph"
+                android:inputType="textEmailAddress"
+                android:maxLines="1"
+                android:paddingVertical="12dp"
+                android:scrollHorizontally="true"
+                android:singleLine="true"
+                android:text="jason.b@vitals-app.com"
+                android:textColor="@color/black"
+                android:textSize="16sp"
+                android:visibility="gone"/>
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginBottom="20dp"
+                android:background="#1A000000"
+                android:visibility="gone"/>
+
+            <!-- Emergency Info (iOS Selector Style) -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:letterSpacing="0.2"
+                android:text="ROLE TYPE"
+                android:textColor="#888888"
+                android:textSize="10sp" />
+
+            <RelativeLayout
+                android:id="@+id/rlBloodTypePicker"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="?attr/selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true">
+
+                <TextView
+                    android:id="@+id/tvRoleTypeSelected"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/moniqa_black_paragraph"
+                    android:paddingVertical="12dp"
+                    android:text="ROLE"
+                    android:textColor="@color/love_primary"
+                    android:textSize="18sp"
+                    android:letterSpacing="0.03"/>
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:rotation="-90"
+                    android:src="@drawable/ic_back_chevron"
+                    app:tint="#4D000000" />
+            </RelativeLayout>
+
+        </LinearLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <!-- Save Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSave"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_marginBottom="40dp"
+        android:fontFamily="@font/moniqa_black_paragraph"
+        android:letterSpacing="0.1"
+        android:text="SAVE CHANGES"
+        android:textColor="@color/white"
+        android:textSize="14sp"
+        app:backgroundTint="@color/love_text_deep"
+        app:cornerRadius="20dp"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

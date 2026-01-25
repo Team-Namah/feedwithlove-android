@@ -1,13 +1,128 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/love_bg_warm"
     tools:context="ui.receiver.FragmentReceiverHistory">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <!-- Header Section -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/layoutHeader"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        android:padding="24dp"
+        app:layout_constraintTop_toTopOf="parent">
 
-</FrameLayout>
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvHistoryTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/moniqa_black_paragraph"
+            android:text="Your Meals"
+            android:textColor="@color/love_text_deep"
+            android:textSize="32sp"
+            android:letterSpacing="0.03"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <com.google.android.material.textview.MaterialTextView
+            android:id="@+id/tvHistorySubTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.7"
+            android:text="Track your received food and status"
+            android:textColor="@color/love_text_deep"
+            android:textSize="14sp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/tvHistoryTitle" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <!-- Filter Chips -->
+    <com.google.android.material.chip.ChipGroup
+        android:id="@+id/chipGroupFilters"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingHorizontal="24dp"
+        app:layout_constraintTop_toBottomOf="@id/layoutHeader"
+        app:singleSelection="true">
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipAll"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:checked="true"
+            android:text="All"
+            app:chipBackgroundColor="@color/white"
+            app:checkedIconVisible="false"
+            app:chipStrokeColor="@color/love_pink_soft"
+            app:chipStrokeWidth="1dp" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipPending"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pending"
+            app:chipBackgroundColor="@color/white"
+            app:checkedIconVisible="false"
+            app:chipStrokeColor="@color/love_pink_soft"
+            app:chipStrokeWidth="1dp" />
+
+        <com.google.android.material.chip.Chip
+            android:id="@+id/chipCompleted"
+            style="@style/Widget.MaterialComponents.Chip.Choice"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Completed"
+            app:chipBackgroundColor="@color/white"
+            app:checkedIconVisible="false"
+            app:chipStrokeColor="@color/love_pink_soft"
+            app:chipStrokeWidth="1dp" />
+
+    </com.google.android.material.chip.ChipGroup>
+
+    <!-- History List -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvReceiverHistory"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="8dp"
+        android:clipToPadding="false"
+        android:paddingBottom="24dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/chipGroupFilters"
+        tools:listitem="@layout/item_available_delivery" />
+
+    <!-- Empty State -->
+    <LinearLayout
+        android:id="@+id/layoutEmpty"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/chipGroupFilters">
+
+        <ImageView
+            android:layout_width="120dp"
+            android:layout_height="120dp"
+            android:alpha="0.2"
+            android:src="@android:drawable/ic_menu_recent_history"
+            app:tint="@color/love_primary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:alpha="0.5"
+            android:text="No meal history found"
+            android:textColor="@color/love_text_deep"
+            android:textSize="16sp" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

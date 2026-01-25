@@ -51,9 +51,9 @@ public class FragmentVolunteerProfile extends Fragment {
         layoutSafetyRulesOverlay = view.findViewById(R.id.layoutSafetyRulesOverlay);
 
         // Edit Profile
-//        view.findViewById(R.id.editProfileInfo).setOnClickListener(v ->
-//                startActivity(new Intent(requireActivity(), EditProfileActivity.class))
-//        );
+        view.findViewById(R.id.editProfileInfo).setOnClickListener(v ->
+                startActivity(new Intent(requireActivity(), EditVolunteerProfileActivity.class))
+        );
 
         // Safety Rules Show/Hide
         view.findViewById(R.id.chipSafetyRules).setOnClickListener(v -> {

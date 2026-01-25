@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <uses-permission android:name="android.permission.CAMERA"/>
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:allowBackup="true"
@@ -15,17 +16,33 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.FeedWithLove">
         <activity
+            android:name="ui.volunteer.EditVolunteerProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name="ui.receiver.EditReceiverProfileActivity"
+            android:exported="false" />
+        <activity
+            android:name="ui.receiver.EditReceiverActivity"
+            android:exported="false" /> <!-- Receiver Activities -->
+        <activity
+            android:name="ui.receiver.ReceiverOrderDetailsActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name="ui.receiver.ReceiverBrowseFoodActivity"
+            android:exported="false" /> <!-- Donor Activities -->
+        <activity
             android:name="ui.donor.EditDonorProfileActivity"
             android:exported="false" />
+        <activity
+            android:name="ui.donor.DonorFoodUploadActivity"
+            android:exported="false" /> <!-- Volunteer Activities -->
         <activity
             android:name="ui.volunteer.VolunteerDeliveryActionActivity"
             android:exported="false" />
         <activity
             android:name="ui.volunteer.AvailableDeliveriesActivity"
-            android:exported="false" />
-        <activity
-            android:name="ui.donor.DonorFoodUploadActivity"
-            android:exported="false" />
+            android:exported="false" /> <!-- Dashboards -->
         <activity
             android:name=".DashboardReceiverActivity"
             android:exported="false" />
@@ -34,10 +51,7 @@
             android:exported="false" />
         <activity
             android:name=".DashboardDonorActivity"
-            android:exported="false" /> <!-- <activity -->
-        <!-- android:name=".DashboardActivity" -->
-        <!-- android:exported="false" -->
-        <!-- android:windowSoftInputMode="adjustResize" /> -->
+            android:exported="false" /> <!-- Auth & Main Activities -->
         <activity
             android:name=".ForgetActivity"
             android:exported="false"
