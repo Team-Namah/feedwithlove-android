@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -12,6 +13,8 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.client.Callback;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
 import com.google.firebase.database.DataSnapshot;
@@ -20,12 +23,14 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.namah.feedwithlove.R;
+import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class FragmentDonorHistory extends Fragment {
 
@@ -33,6 +38,9 @@ public class FragmentDonorHistory extends Fragment {
     private ChipGroup chipGroupFilters;
     private DonationHistoryAdapter adapter;
     private final List<DonationHistoryItemModel> allItems = new ArrayList<>();
+
+    private String userEmail = null;
+    private String userRole = null;
 
     private DatabaseReference foodsRef;
 
@@ -58,8 +66,8 @@ public class FragmentDonorHistory extends Fragment {
 
         foodsRef = FirebaseDatabase.getInstance().getReference("foods");
 
-        loadData();
-
+//        loadData();
+        loadUserDetails();
         // 🔥 Chip selection listener (STORE current filter)
         chipGroupFilters.setOnCheckedChangeListener((group, checkedId) -> {
 
@@ -81,8 +89,41 @@ public class FragmentDonorHistory extends Fragment {
         }
     }
 
+    private void loadUserDetails() {
+
+        if (!AWSMobileClient.getInstance().isSignedIn()) return;
+
+        AWSMobileClient.getInstance().getUserAttributes(
+                new Callback<Map<String, String>>() {
+                    @Override
+                    public void onResult(Map<String, String> attributes) {
+                        if (!isAdded()) return;
+
+                        requireActivity().runOnUiThread(() -> {
+                            userEmail = attributes.get("email");
+                            userRole  = attributes.get("custom:role");
+
+                            // ✅ Only load data AFTER email is available
+                            loadData();
+                        });
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Toast.makeText(getContext(),
+                                "Failed to load user info",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+    }
+
+
     /* ---------------- FIREBASE LOAD ---------------- */
     private void loadData() {
+
+        if (userEmail == null) return;
+
         foodsRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -91,11 +132,26 @@ public class FragmentDonorHistory extends Fragment {
 
                 for (DataSnapshot snap : snapshot.getChildren()) {
 
+                    // 🔥 CHECK DONOR EMAIL
+                    String donorEmail =
+                            snap.child("role/donor").getValue(String.class);
+
+                    if (donorEmail == null ||
+                            !donorEmail.equalsIgnoreCase(userEmail)) {
+                        continue; // ❌ skip others
+                    }
+
                     String title = snap.child("basic/title").getValue(String.class);
                     String imageUrl = snap.child("basic/imageUrl").getValue(String.class);
-                    String address = snap.child("location/address").getValue(String.class);
-                    String delivery = snap.child("status/delivery").getValue(String.class);
-                    Long time = snap.child("timestamps/createdAt").getValue(Long.class);
+
+                    String address =
+                            snap.child("location/pickup/address").getValue(String.class);
+
+                    String delivery =
+                            snap.child("status/delivery").getValue(String.class);
+
+                    Long time =
+                            snap.child("timestamps/createdAt").getValue(Long.class);
 
                     allItems.add(new DonationHistoryItemModel(
                             title,
@@ -106,7 +162,7 @@ public class FragmentDonorHistory extends Fragment {
                     ));
                 }
 
-                // 🔥 APPLY CURRENT FILTER, NOT "All"
+                // ✅ Apply selected chip filter
                 filter(currentFilter);
             }
 
@@ -114,6 +170,7 @@ public class FragmentDonorHistory extends Fragment {
             public void onCancelled(@NonNull DatabaseError error) { }
         });
     }
+
 
     /* ---------------- CHIP UI COLOR ---------------- */
     private void updateChipUI(int selectedChipId) {
