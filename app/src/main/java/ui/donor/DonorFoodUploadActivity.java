@@ -247,9 +247,7 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
         Map<String, Object> data = new HashMap<>();
 
         data.put("basic/title", etFoodName.getText().toString());
-        data.put("basic/description", etNotes.getText().toString());
         data.put("basic/quantity", etQuantity.getText().toString());
-        data.put("basic/foodType", "VEG");
         data.put("basic/expiryTime", etTime.getText().toString());
 
         data.put("location/address", etLocation.getText().toString());
@@ -257,7 +255,7 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
         data.put("location/longitude", currentLng);
 
         data.put("status/state", "AVAILABLE");
-        data.put("status/delivery", "pending");
+        data.put("status/delivery", "PENDING");
         data.put("timestamps/createdAt", now);
         data.put("timestamps/updatedAt", now);
 
