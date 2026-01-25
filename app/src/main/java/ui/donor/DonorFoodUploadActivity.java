@@ -250,9 +250,14 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
         data.put("basic/quantity", etQuantity.getText().toString());
         data.put("basic/expiryTime", etTime.getText().toString());
 
-        data.put("location/address", etLocation.getText().toString());
-        data.put("location/latitude", currentLat);
-        data.put("location/longitude", currentLng);
+        data.put("location/pickup/address", etLocation.getText().toString());
+        data.put("location/pickup/latitude", currentLat);
+        data.put("location/pickup/longitude", currentLng);
+
+        data.put("location/drop/address", "null");
+        data.put("location/drop/latitude", "null");
+        data.put("location/drop/longitude", "null");
+
 
         data.put("status/state", "AVAILABLE");
         data.put("status/delivery", "PENDING");
