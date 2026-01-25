@@ -44,7 +44,6 @@ public class EditReceiverProfileActivity extends AppCompatActivity {
     private EditText etName, etEmail;
     private ImageView ivEditAvatar;
 
-    // ✅ MUST MATCH YOUR REAL BUCKET
     private static final String BUCKET_NAME = "feed-profile-images";
     private static final Regions REGION = Regions.AP_SOUTH_1;
 
@@ -78,7 +77,8 @@ public class EditReceiverProfileActivity extends AppCompatActivity {
             }
         });
 
-        findViewById(R.id.clAvatarContainer).setOnClickListener(v -> openImagePicker());
+        findViewById(R.id.clAvatarContainer)
+                .setOnClickListener(v -> imagePickerLauncher.launch("image/*"));
 
         imagePickerLauncher =
                 registerForActivityResult(
@@ -100,19 +100,17 @@ public class EditReceiverProfileActivity extends AppCompatActivity {
         loadCurrentDetails();
     }
 
-    private void openImagePicker() {
-        imagePickerLauncher.launch("image/*");
-    }
-
     private void loadCurrentDetails() {
-        CognitoUserPool userPool = CognitoManager.getUserPool(this);
-        CognitoUser user = userPool.getCurrentUser();
+        CognitoUserPool pool = CognitoManager.getUserPool(this);
+        CognitoUser user = pool.getCurrentUser();
         if (user == null) return;
 
         user.getDetailsInBackground(new GetDetailsHandler() {
             @Override
             public void onSuccess(CognitoUserDetails details) {
-                Map<String, String> attrs = details.getAttributes().getAttributes();
+                Map<String, String> attrs =
+                        details.getAttributes().getAttributes();
+
                 runOnUiThread(() -> {
                     etName.setText(attrs.get("name"));
                     etEmail.setText(attrs.get("email"));
@@ -125,19 +123,20 @@ public class EditReceiverProfileActivity extends AppCompatActivity {
             public void onFailure(Exception exception) {
                 runOnUiThread(() ->
                         Toast.makeText(EditReceiverProfileActivity.this,
-                                "Failed to load profile", Toast.LENGTH_SHORT).show());
+                                "Failed to load profile",
+                                Toast.LENGTH_SHORT).show());
             }
         });
     }
 
-    private void loadProfileImage(String imageUrl) {
-        if (imageUrl == null || imageUrl.isEmpty()) {
+    private void loadProfileImage(String url) {
+        if (url == null || url.isEmpty()) {
             ivEditAvatar.setImageResource(R.drawable.bg_splash);
             return;
         }
 
         Picasso.get()
-                .load(imageUrl)
+                .load(url)
                 .placeholder(R.drawable.bg_splash)
                 .error(R.drawable.bg_splash)
                 .fit()
@@ -145,15 +144,17 @@ public class EditReceiverProfileActivity extends AppCompatActivity {
                 .into(ivEditAvatar);
     }
 
-    private void uploadImageToS3(Uri imageUri) {
+    private void uploadImageToS3(Uri uri) {
 
         if (!AWSMobileClient.getInstance().isSignedIn()) {
-            Toast.makeText(this, "User not authenticated", Toast.LENGTH_SHORT).show();
+            Toast.makeText(this,
+                    "User not authenticated",
+                    Toast.LENGTH_SHORT).show();
             return;
         }
 
-        File cachedFile = createTempFileFromUri(imageUri);
-        if (cachedFile == null) return;
+        File file = createTempFileFromUri(uri);
+        if (file == null) return;
 
         AmazonS3Client s3Client =
                 new AmazonS3Client(AWSMobileClient.getInstance());
@@ -167,20 +168,20 @@ public class EditReceiverProfileActivity extends AppCompatActivity {
         String key = "profiles/profile_" + System.currentTimeMillis() + ".jpg";
 
         TransferObserver observer =
-                transferUtility.upload(BUCKET_NAME, key, cachedFile);
+                transferUtility.upload(BUCKET_NAME, key, file);
 
         observer.setTransferListener(new TransferListener() {
             @Override
             public void onStateChanged(int id, TransferState state) {
                 if (state == TransferState.COMPLETED) {
 
-                    String s3Url =
+                    String imageUrl =
                             "https://" + BUCKET_NAME +
                                     ".s3." + REGION.getName() +
                                     ".amazonaws.com/" + key;
 
-                    updateProfilePictureAttribute(s3Url);
-                    cachedFile.delete();
+                    updateProfilePictureAttribute(imageUrl);
+                    file.delete();
                 }
             }
 
@@ -190,7 +191,8 @@ public class EditReceiverProfileActivity extends AppCompatActivity {
             public void onError(int id, Exception ex) {
                 runOnUiThread(() ->
                         Toast.makeText(EditReceiverProfileActivity.this,
-                                "Upload failed", Toast.LENGTH_SHORT).show());
+                                "Upload failed",
+                                Toast.LENGTH_SHORT).show());
             }
         });
     }
@@ -203,22 +205,24 @@ public class EditReceiverProfileActivity extends AppCompatActivity {
         CognitoUserAttributes attrs = new CognitoUserAttributes();
         attrs.addAttribute("picture", url);
 
-        user.updateAttributesInBackground(attrs, new UpdateAttributesHandler() {
-            @Override
-            public void onSuccess(List list) {
-                runOnUiThread(() -> {
-                    selectedImageUri = null;
-                    saveProfileTextOnly();
-                });
-            }
+        user.updateAttributesInBackground(attrs,
+                new UpdateAttributesHandler() {
+                    @Override
+                    public void onSuccess(List list) {
+                        runOnUiThread(() -> {
+                            selectedImageUri = null;
+                            saveProfileTextOnly();
+                        });
+                    }
 
-            @Override
-            public void onFailure(Exception exception) {
-                runOnUiThread(() ->
-                        Toast.makeText(EditReceiverProfileActivity.this,
-                                "Failed to update picture", Toast.LENGTH_SHORT).show());
-            }
-        });
+                    @Override
+                    public void onFailure(Exception exception) {
+                        runOnUiThread(() ->
+                                Toast.makeText(EditReceiverProfileActivity.this,
+                                        "Failed to update picture",
+                                        Toast.LENGTH_SHORT).show());
+                    }
+                });
     }
 
     private void saveProfileTextOnly() {
@@ -232,23 +236,26 @@ public class EditReceiverProfileActivity extends AppCompatActivity {
         attrs.addAttribute("name", etName.getText().toString());
         attrs.addAttribute("email", etEmail.getText().toString());
 
-        user.updateAttributesInBackground(attrs, new UpdateAttributesHandler() {
-            @Override
-            public void onSuccess(List list) {
-                runOnUiThread(() -> {
-                    Toast.makeText(EditReceiverProfileActivity.this,
-                            "Profile updated", Toast.LENGTH_SHORT).show();
-                    finish();
-                });
-            }
+        user.updateAttributesInBackground(attrs,
+                new UpdateAttributesHandler() {
+                    @Override
+                    public void onSuccess(List list) {
+                        runOnUiThread(() -> {
+                            Toast.makeText(EditReceiverProfileActivity.this,
+                                    "Profile updated",
+                                    Toast.LENGTH_SHORT).show();
+                            finish();
+                        });
+                    }
 
-            @Override
-            public void onFailure(Exception exception) {
-                runOnUiThread(() ->
-                        Toast.makeText(EditReceiverProfileActivity.this,
-                                "Update failed", Toast.LENGTH_SHORT).show());
-            }
-        });
+                    @Override
+                    public void onFailure(Exception exception) {
+                        runOnUiThread(() ->
+                                Toast.makeText(EditReceiverProfileActivity.this,
+                                        "Update failed",
+                                        Toast.LENGTH_SHORT).show());
+                    }
+                });
     }
 
     private File createTempFileFromUri(Uri uri) {
@@ -256,14 +263,17 @@ public class EditReceiverProfileActivity extends AppCompatActivity {
             InputStream in = getContentResolver().openInputStream(uri);
             File file = new File(getCacheDir(), "profile_temp.jpg");
             FileOutputStream out = new FileOutputStream(file);
+
             byte[] buffer = new byte[4096];
             int len;
             while ((len = in.read(buffer)) != -1) {
                 out.write(buffer, 0, len);
             }
+
             in.close();
             out.close();
             return file;
+
         } catch (Exception e) {
             return null;
         }
@@ -273,7 +283,8 @@ public class EditReceiverProfileActivity extends AppCompatActivity {
         View view = getCurrentFocus();
         if (view != null) {
             InputMethodManager imm =
-                    (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                    (InputMethodManager)
+                            getSystemService(Context.INPUT_METHOD_SERVICE);
             imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
         }
     }
