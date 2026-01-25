@@ -47,7 +47,8 @@
                     android:scaleType="centerCrop"
                     android:src="@drawable/bg_splash" />
 
-                <View
+                <ImageView
+                    android:id="@+id/foodimg"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:background="@drawable/bg_image_overlay_gradient" />

@@ -118,8 +118,7 @@ public class SignupActivity extends AppCompatActivity {
             public void onSuccess(CognitoUser user, SignUpResult signUpResult) {
 
                 DatabaseReference ref = FirebaseDatabase.getInstance()
-                        .getReference("foods")
-                        .child("role")
+                        .getReference("role")
                         .child(selectedRole.toLowerCase())
                         .push();   // 🔥 AUTO {uid}
 
