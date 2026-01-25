@@ -225,6 +225,7 @@ public class ReceiverOrderDetailsActivity extends AppCompatActivity {
         // ✅ Receiver & status
         data.put("role/receiver", receiverEmail);
         data.put("status/state", "UNAVAILABLE");
+        data.put("status/delivery_valounteer", "NULL");
         data.put("status/delivery", "PENDING");
 
         // ✅ Timestamp
