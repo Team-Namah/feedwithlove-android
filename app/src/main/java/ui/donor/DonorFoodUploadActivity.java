@@ -27,6 +27,7 @@ import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferNetworkLossHandler;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
@@ -53,10 +54,15 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.security.auth.callback.Callback;
+
 public class DonorFoodUploadActivity extends AppCompatActivity {
 
     private static final int LOCATION_PERMISSION_CODE = 101;
     private static final int CAMERA_PERMISSION_CODE = 102;
+
+    private String userEmail = null;
+    private String userRole = null;
 
     private double currentLat = 0.0;
     private double currentLng = 0.0;
@@ -115,9 +121,36 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
 
         rootRef = FirebaseDatabase.getInstance().getReference();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-
         initViews();
         setupListeners();
+        loadUserDetails();
+
+    }
+
+
+    private void loadUserDetails() {
+
+        if (!AWSMobileClient.getInstance().isSignedIn()) return;
+
+        AWSMobileClient.getInstance().getUserAttributes(
+                new com.amazonaws.mobile.client.Callback<Map<String, String>>() {
+                    @Override
+                    public void onResult(Map<String, String> attributes) {
+
+                        runOnUiThread(() -> {
+                            userEmail = attributes.get("email");
+                            userRole  = attributes.get("custom:role");
+                        });
+                    }
+
+                    @Override
+                    public void onError(Exception e) {
+                        Toast.makeText(DonorFoodUploadActivity.this,
+                                "Failed to load user data",
+                                Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
     }
 
     private void initViews() {
@@ -238,6 +271,8 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
         return true;
     }
 
+
+
     /* ---------------- FIREBASE + AWS ---------------- */
     private void createFoodEntry() {
 
@@ -264,6 +299,27 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
         data.put("timestamps/createdAt", now);
         data.put("timestamps/updatedAt", now);
 
+
+        data.put("role/volunteer", "null");
+        data.put("role/receiver", "null");
+        data.put("role/donor", "null");
+
+        if (userRole != null && userEmail != null) {
+
+            switch (userRole.toLowerCase()) {
+                case "donor":
+                    data.put("role/donor", userEmail);
+                    break;
+
+                case "volunteer":
+                    data.put("role/volunteer", userEmail);
+                    break;
+
+                case "receiver":
+                    data.put("role/receiver", userEmail);
+                    break;
+            }
+        }
         rootRef.child("foods").child(foodId).updateChildren(data);
 
         uploadImageToAWS(foodId);
