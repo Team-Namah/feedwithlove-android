@@ -152,6 +152,7 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/tvMealsReceivedCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/moniqa_black_paragraph"
@@ -191,6 +192,7 @@
                 android:orientation="vertical">
 
                 <TextView
+                    android:id="@+id/tvMealsPendingCount"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:fontFamily="@font/moniqa_black_paragraph"

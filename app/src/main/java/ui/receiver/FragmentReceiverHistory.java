@@ -1,5 +1,6 @@
 package ui.receiver;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -7,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -14,25 +16,38 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.client.Callback;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.chip.Chip;
 import com.google.android.material.chip.ChipGroup;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.namah.feedwithlove.R;
+import com.squareup.picasso.Picasso;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Locale;
+import java.util.Map;
 
 public class FragmentReceiverHistory extends Fragment {
 
     private RecyclerView rvReceiverHistory;
     private ReceiverHistoryAdapter adapter;
-    private List<ReceiverHistoryItem> allSamples = new ArrayList<>();
     private ChipGroup chipGroupFilters;
 
-    public FragmentReceiverHistory() {
-        // Required empty public constructor
-    }
+    private final List<ReceiverHistoryItem> allItems = new ArrayList<>();
+
+    private DatabaseReference foodsRef;
+    private String userEmail;
+    private String currentFilter = "All";
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -46,140 +61,196 @@ public class FragmentReceiverHistory extends Fragment {
 
         rvReceiverHistory = view.findViewById(R.id.rvReceiverHistory);
         chipGroupFilters = view.findViewById(R.id.chipGroupFilters);
+
         rvReceiverHistory.setLayoutManager(new LinearLayoutManager(getContext()));
-
-        setupSampleData();
-        setupFilters();
-    }
-
-    private void setupSampleData() {
-        allSamples.clear();
-        allSamples.add(new ReceiverHistoryItem("Freshly Baked Pasta", "Oct 24, 2023", "123 Green Street", "COMPLETED", "Donor: Mario's Kitchen", "Volunteer: Alex T."));
-        allSamples.add(new ReceiverHistoryItem("Healthy Fruit Salad", "Oct 25, 2023", "456 Hope Avenue", "PENDING", "Donor: Fresh Mart", "Volunteer: Pending..."));
-        allSamples.add(new ReceiverHistoryItem("Veggie Curry Set", "Oct 26, 2023", "789 Kindness Blvd", "COMPLETED", "Donor: Spice Village", "Volunteer: Sarah J."));
-        allSamples.add(new ReceiverHistoryItem("Homemade Bread", "Oct 27, 2023", "321 Love Road", "PENDING", "Donor: Old Bakes", "Volunteer: Pending..."));
-
-        updateList(allSamples);
-    }
-
-    private void setupFilters() {
-        chipGroupFilters.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.chipPending) {
-                filterList("PENDING");
-            } else if (checkedId == R.id.chipCompleted) {
-                filterList("COMPLETED");
-            } else {
-                updateList(allSamples);
-            }
-        });
-    }
-
-    private void filterList(String status) {
-        List<ReceiverHistoryItem> filtered = allSamples.stream()
-                .filter(item -> item.getStatus().equalsIgnoreCase(status))
-                .collect(Collectors.toList());
-        updateList(filtered);
-    }
-
-    private void updateList(List<ReceiverHistoryItem> list) {
-        adapter = new ReceiverHistoryAdapter(list, this::showMealDetails);
+        adapter = new ReceiverHistoryAdapter(new ArrayList<>(), this::showMealDetails);
         rvReceiverHistory.setAdapter(adapter);
-    }
 
-    private void showMealDetails(ReceiverHistoryItem item) {
-        if (getContext() == null) return;
+        foodsRef = FirebaseDatabase.getInstance().getReference("foods");
 
-        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(getContext(), R.style.BottomSheetDialogTheme);
-        View bottomSheetView = LayoutInflater.from(getContext()).inflate(
-                R.layout.layout_donation_details_bottom_sheet,
-                null
-        );
+        loadUserDetails();
 
-        TextView tvTitle = bottomSheetView.findViewById(R.id.tvDetailFoodName);
-        TextView tvLocation = bottomSheetView.findViewById(R.id.tvDetailLocation);
-        TextView tvDateTime = bottomSheetView.findViewById(R.id.tvDetailDateTime);
-        TextView tvLabel = bottomSheetView.findViewById(R.id.tvVolunteerLabel);
-        TextView tvVolunteerName = bottomSheetView.findViewById(R.id.tvVolunteerName);
-        TextView tvStatus = bottomSheetView.findViewById(R.id.tvDetailStatus);
-
-        tvTitle.setText(item.getFoodName());
-        tvLocation.setText("Drop Location: " + item.getLocation());
-        tvDateTime.setText("Order Date: " + item.getDateTime());
-        tvLabel.setText(item.getDonorInfo());
-        tvVolunteerName.setText(item.getVolunteerInfo());
-        tvStatus.setText(item.getStatus());
-
-        bottomSheetDialog.setContentView(bottomSheetView);
-        bottomSheetDialog.setOnShowListener(dialog -> {
-            BottomSheetDialog d = (BottomSheetDialog) dialog;
-            FrameLayout bottomSheet = d.findViewById(com.google.android.material.R.id.design_bottom_sheet);
-            if (bottomSheet != null) {
-                BottomSheetBehavior.from(bottomSheet).setState(BottomSheetBehavior.STATE_EXPANDED);
+        chipGroupFilters.setOnCheckedChangeListener((group, checkedId) -> {
+            updateChipUI(checkedId);
+            Chip chip = group.findViewById(checkedId);
+            if (chip != null) {
+                currentFilter = chip.getText().toString();
+                filter(currentFilter);
             }
         });
-        bottomSheetDialog.show();
+
+        if (chipGroupFilters.getChildCount() > 0) {
+            Chip defaultChip = (Chip) chipGroupFilters.getChildAt(0);
+            defaultChip.setChecked(true);
+            updateChipUI(defaultChip.getId());
+        }
     }
 
-    // --- Static Inner Classes ---
-    public static class ReceiverHistoryItem {
-        private String foodName, dateTime, location, status, donorInfo, volunteerInfo;
-        public ReceiverHistoryItem(String foodName, String dateTime, String location, String status, String donorInfo, String volunteerInfo) {
+    /* ---------------- USER DETAILS ---------------- */
+    private void loadUserDetails() {
+        if (!AWSMobileClient.getInstance().isSignedIn()) return;
+
+        AWSMobileClient.getInstance().getUserAttributes(new Callback<Map<String, String>>() {
+            @Override
+            public void onResult(Map<String, String> attributes) {
+                if (!isAdded()) return;
+                requireActivity().runOnUiThread(() -> {
+                    userEmail = attributes.get("email");
+                    loadData();
+                });
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Toast.makeText(getContext(), "Failed to load user info", Toast.LENGTH_SHORT).show();
+            }
+        });
+    }
+
+    /* ---------------- FIREBASE LOAD ---------------- */
+    private void loadData() {
+        if (userEmail == null) return;
+
+        foodsRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+
+                allItems.clear();
+
+                for (DataSnapshot snap : snapshot.getChildren()) {
+
+                    String receiverEmail = snap.child("role/receiver").getValue(String.class);
+                    if (receiverEmail == null || !receiverEmail.equalsIgnoreCase(userEmail)) continue;
+
+                    String title = snap.child("basic/title").getValue(String.class);
+                    String imageUrl = snap.child("basic/imageUrl").getValue(String.class);
+                    String address = snap.child("location/drop/address").getValue(String.class);
+
+                    String donor = snap.child("role/donor").getValue(String.class);
+                    String volunteerRole = snap.child("role/volunteer").getValue(String.class);
+                    String volunteerStatus = snap.child("status/delivery_valounteer").getValue(String.class);
+
+                    Long time = snap.child("timestamps/createdAt").getValue(Long.class);
+
+                    String status = (volunteerStatus == null || volunteerStatus.equalsIgnoreCase("NULL"))
+                            ? "PENDING"
+                            : "COMPLETED";
+
+                    String volunteerText = status.equals("PENDING")
+                            ? "Volunteer: Pending..."
+                            : "Volunteer: " + (volunteerRole == null ? "Assigned" : volunteerRole);
+
+                    allItems.add(new ReceiverHistoryItem(
+                            title,
+                            formatTime(time),
+                            address,
+                            status,
+                            "Donor: " + (donor == null ? "-" : donor),
+                            volunteerText,
+                            "Receiver: " + receiverEmail,
+                            imageUrl
+                    ));
+                }
+
+                filter(currentFilter);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) { }
+        });
+    }
+
+    /* ---------------- FILTER ---------------- */
+    private void filter(String type) {
+        List<ReceiverHistoryItem> filtered = new ArrayList<>();
+        for (ReceiverHistoryItem item : allItems) {
+            if ("All".equalsIgnoreCase(type) || item.status.equalsIgnoreCase(type)) {
+                filtered.add(item);
+            }
+        }
+        adapter.updateList(filtered);
+    }
+
+    /* ---------------- CHIP UI ---------------- */
+    private void updateChipUI(int selectedChipId) {
+        for (int i = 0; i < chipGroupFilters.getChildCount(); i++) {
+            Chip chip = (Chip) chipGroupFilters.getChildAt(i);
+            if (chip.getId() == selectedChipId) {
+                chip.setChipBackgroundColorResource(R.color.love_primary);
+                chip.setTextColor(Color.WHITE);
+            } else {
+                chip.setChipBackgroundColorResource(R.color.white);
+                chip.setTextColor(getResources().getColor(R.color.love_text_deep));
+            }
+        }
+    }
+
+    private String formatTime(Long t) {
+        if (t == null) return "";
+        return new SimpleDateFormat("dd MMM yyyy • hh:mm a", Locale.getDefault())
+                .format(new Date(t));
+    }
+
+    /* ---------------- BOTTOM SHEET ---------------- */
+    private void showMealDetails(ReceiverHistoryItem item) {
+
+        BottomSheetDialog dialog =
+                new BottomSheetDialog(getContext(), R.style.BottomSheetDialogTheme);
+
+        View v = LayoutInflater.from(getContext())
+                .inflate(R.layout.layout_donation_details_bottom_sheet, null);
+
+        ImageView ivImage = v.findViewById(R.id.foodimg);
+
+        ((TextView) v.findViewById(R.id.tvDetailFoodName)).setText(item.foodName);
+        ((TextView) v.findViewById(R.id.tvDetailLocation))
+                .setText("Drop Location: " + item.location);
+        ((TextView) v.findViewById(R.id.tvDetailDateTime)).setText(item.dateTime);
+        ((TextView) v.findViewById(R.id.tvVolunteerLabel)).setText(item.donorInfo);
+        ((TextView) v.findViewById(R.id.tvVolunteerName)).setText(item.volunteerInfo);
+        ((TextView) v.findViewById(R.id.volunteer)).setText(item.receiverInfo);
+        ((TextView) v.findViewById(R.id.tvDetailStatus)).setText(item.status);
+
+        if (item.imageUrl != null && !item.imageUrl.isEmpty()) {
+            Picasso.get()
+                    .load(item.imageUrl)
+                    .placeholder(R.drawable.ic_launcher_foreground)
+                    .error(R.drawable.ic_launcher_foreground)
+                    .into(ivImage);
+        } else {
+            ivImage.setImageResource(R.drawable.ic_launcher_foreground);
+        }
+
+        dialog.setContentView(v);
+        dialog.setOnShowListener(d -> {
+            FrameLayout sheet =
+                    dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (sheet != null) {
+                BottomSheetBehavior.from(sheet)
+                        .setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
+        });
+        dialog.show();
+    }
+
+    /* ---------------- MODEL ---------------- */
+    static class ReceiverHistoryItem {
+        String foodName, dateTime, location, status;
+        String donorInfo, volunteerInfo, receiverInfo, imageUrl;
+
+        ReceiverHistoryItem(String foodName, String dateTime, String location,
+                            String status, String donorInfo,
+                            String volunteerInfo, String receiverInfo,
+                            String imageUrl) {
+
             this.foodName = foodName;
             this.dateTime = dateTime;
             this.location = location;
             this.status = status;
             this.donorInfo = donorInfo;
             this.volunteerInfo = volunteerInfo;
-        }
-        public String getFoodName() { return foodName; }
-        public String getDateTime() { return dateTime; }
-        public String getLocation() { return location; }
-        public String getStatus() { return status; }
-        public String getDonorInfo() { return donorInfo; }
-        public String getVolunteerInfo() { return volunteerInfo; }
-    }
-
-    public static class ReceiverHistoryAdapter extends RecyclerView.Adapter<ReceiverHistoryAdapter.ViewHolder> {
-        private List<ReceiverHistoryItem> items;
-        private OnItemClickListener listener;
-
-        public interface OnItemClickListener { void onItemClick(ReceiverHistoryItem item); }
-
-        public ReceiverHistoryAdapter(List<ReceiverHistoryItem> items, OnItemClickListener listener) {
-            this.items = items;
-            this.listener = listener;
-        }
-
-        @NonNull
-        @Override
-        public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_available_delivery, parent, false);
-            return new ViewHolder(view);
-        }
-
-        @Override
-        public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-            ReceiverHistoryItem item = items.get(position);
-            holder.tvFoodName.setText(item.getFoodName());
-            holder.tvDistance.setText(item.getDateTime());
-            holder.tvLocation.setText(item.getLocation());
-            holder.chipTime.setText(item.getStatus());
-            holder.itemView.setOnClickListener(v -> listener.onItemClick(item));
-        }
-
-        @Override
-        public int getItemCount() { return items.size(); }
-
-        public static class ViewHolder extends RecyclerView.ViewHolder {
-            TextView tvFoodName, tvDistance, tvLocation;
-            com.google.android.material.chip.Chip chipTime;
-            public ViewHolder(@NonNull View itemView) {
-                super(itemView);
-                tvFoodName = itemView.findViewById(R.id.tvFoodName);
-                tvDistance = itemView.findViewById(R.id.tvDistance);
-                tvLocation = itemView.findViewById(R.id.tvPickupLoc);
-                chipTime = itemView.findViewById(R.id.chipTime);
-            }
+            this.receiverInfo = receiverInfo;
+            this.imageUrl = imageUrl;
         }
     }
 }
