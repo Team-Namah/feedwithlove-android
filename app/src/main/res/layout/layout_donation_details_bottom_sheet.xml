@@ -233,7 +233,7 @@
                     app:layout_constraintTop_toTopOf="@id/ivVolunteerAvatar" />
 
                 <TextView
-                    android:id="@+id/volunteer"
+                    android:id="@+id/tvVolunteerEmail"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:alpha="0.6"

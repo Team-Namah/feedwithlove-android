@@ -208,7 +208,7 @@ public class FragmentReceiverHistory extends Fragment {
         ((TextView) v.findViewById(R.id.tvDetailDateTime)).setText(item.dateTime);
         ((TextView) v.findViewById(R.id.tvVolunteerLabel)).setText(item.donorInfo);
         ((TextView) v.findViewById(R.id.tvVolunteerName)).setText(item.volunteerInfo);
-        ((TextView) v.findViewById(R.id.volunteer)).setText(item.receiverInfo);
+        ((TextView) v.findViewById(R.id.tvVolunteerEmail)).setText(item.receiverInfo);
         ((TextView) v.findViewById(R.id.tvDetailStatus)).setText(item.status);
 
         if (item.imageUrl != null && !item.imageUrl.isEmpty()) {
