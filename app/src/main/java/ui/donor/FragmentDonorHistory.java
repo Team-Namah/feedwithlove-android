@@ -57,6 +57,7 @@ public class FragmentDonorHistory extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+
         rvHistory = view.findViewById(R.id.rvHistory);
         chipGroupFilters = view.findViewById(R.id.chipGroupFilters);
 

@@ -4,9 +4,13 @@ import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import androidx.activity.EdgeToEdge;
+import androidx.activity.OnBackPressedCallback;
 import androidx.activity.SystemBarStyle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,13 +30,43 @@ import ui.donor.FragmentDonorHome;
 import ui.donor.FragmentDonorProfile;
 
 public class DashboardDonorActivity extends AppCompatActivity {
-
+    private boolean doubleBackToExitPressedOnce = false;
     private ViewPager2 viewPager;
     private SmoothBottomBar bottomBar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        getOnBackPressedDispatcher().addCallback(this,
+                new OnBackPressedCallback(true) {
+                    @Override
+                    public void handleOnBackPressed() {
+
+                        if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                            getSupportFragmentManager().popBackStack();
+                            return;
+                        }
+
+                        if (doubleBackToExitPressedOnce) {
+                            finish();
+                            return;
+                        }
+
+                        doubleBackToExitPressedOnce = true;
+                        Toast.makeText(
+                                DashboardDonorActivity.this,
+                                "Press BACK again to exit",
+                                Toast.LENGTH_SHORT
+                        ).show();
+
+                        new Handler(Looper.getMainLooper()).postDelayed(
+                                () -> doubleBackToExitPressedOnce = false,
+                                2000
+                        );
+                    }
+                });
 
         setContentView(R.layout.activity_dashboard_donor);
         // Enable fullscreen / edge-to-edge
