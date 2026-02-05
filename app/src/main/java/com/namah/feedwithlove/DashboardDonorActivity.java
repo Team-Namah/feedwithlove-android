@@ -41,8 +41,6 @@ public class DashboardDonorActivity extends AppCompatActivity {
                 SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
         );
 
-        viewPager = findViewById(R.id.viewPager);
-        bottomBar = findViewById(R.id.bottomBar);
         ViewCompat.setOnApplyWindowInsetsListener(findViewById(android.R.id.content), (v, insets) -> {
             // Get the system bar insets, specifically the bottom inset for the navigation bar
             Insets systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars());
@@ -55,6 +53,10 @@ public class DashboardDonorActivity extends AppCompatActivity {
             // Consume the insets to prevent them from being passed to child views
             return WindowInsetsCompat.CONSUMED;
         });
+
+        viewPager = findViewById(R.id.viewPager);
+        bottomBar = findViewById(R.id.bottomBar);
+
 
         viewPager.setAdapter(new DashboardPagerAdapter(this));
 
