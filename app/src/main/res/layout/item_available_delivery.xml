@@ -35,7 +35,12 @@
             android:fontFamily="sans-serif-medium"
             android:text="Warm Pasta Meal"
             android:textColor="@color/love_text_deep"
-            android:textSize="18sp"
+            android:maxLines="1"
+            android:singleLine="true"
+            app:autoSizeTextType="uniform"
+            app:autoSizeMinTextSize="8sp"
+            app:autoSizeMaxTextSize="18sp"
+            app:autoSizeStepGranularity="1sp"
             app:layout_constraintEnd_toStartOf="@+id/tvDistance"
             app:layout_constraintStart_toEndOf="@id/ivFoodThumb"
             app:layout_constraintTop_toTopOf="@id/ivFoodThumb" />
@@ -75,10 +80,14 @@
                 android:layout_marginStart="4dp"
                 android:alpha="0.7"
                 android:ellipsize="end"
-                android:maxLines="1"
                 android:text="Downtown Restaurant"
                 android:textColor="@color/love_text_deep"
-                android:textSize="12sp" />
+                android:maxLines="1"
+                android:singleLine="true"
+                app:autoSizeTextType="uniform"
+                app:autoSizeMinTextSize="8sp"
+                app:autoSizeMaxTextSize="12sp"
+                app:autoSizeStepGranularity="1sp" />
         </LinearLayout>
 
         <com.google.android.material.chip.Chip

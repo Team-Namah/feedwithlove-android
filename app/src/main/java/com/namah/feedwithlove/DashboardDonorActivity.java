@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.widget.Toast;
 
@@ -23,6 +24,10 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.UserStateDetails;
+
 import me.ibrahimsn.lib.SmoothBottomBar;
 import me.ibrahimsn.lib.OnItemSelectedListener;
 import ui.donor.FragmentDonorHistory;
@@ -38,6 +43,19 @@ public class DashboardDonorActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Initialize AWSMobileClient before setting up fragments
+        AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
+            @Override
+            public void onResult(UserStateDetails userStateDetails) {
+                Log.i("AWS", "AWSMobileClient initialized: " + userStateDetails.getUserState());
+                runOnUiThread(() -> setupUI());
+            }
+
+            @Override
+            public void onError(Exception e) {
+                Log.e("AWS", "Initialization error.", e);
+            }
+        });
 
         getOnBackPressedDispatcher().addCallback(this,
                 new OnBackPressedCallback(true) {
@@ -67,7 +85,9 @@ public class DashboardDonorActivity extends AppCompatActivity {
                         );
                     }
                 });
+    }
 
+    private void setupUI() {
         setContentView(R.layout.activity_dashboard_donor);
         // Enable fullscreen / edge-to-edge
         EdgeToEdge.enable(this,

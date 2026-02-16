@@ -24,6 +24,7 @@
             android:textColor="@color/love_text_deep"
             android:textSize="32sp"
             android:letterSpacing="0.03"
+            android:layout_marginTop="20dp"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
