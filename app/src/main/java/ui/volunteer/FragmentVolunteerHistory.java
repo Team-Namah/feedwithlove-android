@@ -1,5 +1,6 @@
 package ui.volunteer;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.namah.feedwithlove.R;
+import com.namah.feedwithlove.Status;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
@@ -52,6 +54,7 @@ public class FragmentVolunteerHistory extends Fragment {
     private String volunteerAvatar;
 
     private DatabaseReference foodsRef;
+    private ValueEventListener historyListener;
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -67,10 +70,10 @@ public class FragmentVolunteerHistory extends Fragment {
         rvVolunteerHistory = view.findViewById(R.id.rvVolunteerHistory);
         chipGroupFilters = view.findViewById(R.id.chipGroupFilters);
 
-        rvVolunteerHistory.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvVolunteerHistory.setLayoutManager(new LinearLayoutManager(requireContext()));
 
         adapter = new VolunteerHistoryAdapter(new ArrayList<>(), item -> {
-            if ("COMPLETED".equalsIgnoreCase(item.getStatus())) {
+            if (Status.COMPLETED.name().equalsIgnoreCase(item.getStatus())) {
                 showDeliveryDetails(item);
             } else {
                 openDeliveryActionActivity(item);
@@ -94,8 +97,9 @@ public class FragmentVolunteerHistory extends Fragment {
                 new Callback<Map<String, String>>() {
                     @Override
                     public void onResult(Map<String, String> attributes) {
-                        if (!isAdded()) return;
-                        requireActivity().runOnUiThread(() -> {
+                        Activity activity = getActivity();
+                        if (activity == null || !isAdded()) return;
+                        activity.runOnUiThread(() -> {
                             volunteerName = attributes.get("name");
                             userEmail = attributes.get("email");
 
@@ -119,9 +123,14 @@ public class FragmentVolunteerHistory extends Fragment {
     private void loadData() {
         if (userEmail == null) return;
 
-        foodsRef.addValueEventListener(new ValueEventListener() {
+        if (historyListener != null) {
+            foodsRef.removeEventListener(historyListener);
+        }
+
+        historyListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
 
                 allItems.clear();
 
@@ -140,11 +149,11 @@ public class FragmentVolunteerHistory extends Fragment {
                     String status = snap.child("status/delivery_valounteer").getValue(String.class);
                     Long time = snap.child("timestamps/createdAt").getValue(Long.class);
 
-                    if (status == null || status.equalsIgnoreCase("PENDING")) {
-                        status = "PENDING";
-                    } else if (!status.equalsIgnoreCase("COMPLETED")) {
+                    if (status == null || status.equalsIgnoreCase(Status.PENDING.name())) {
+                        status = Status.PENDING.name();
+                    } else if (!status.equalsIgnoreCase(Status.COMPLETED.name())) {
                          // Default to pending if it's something else like "ASSIGNED"
-                         status = "PENDING";
+                         status = Status.PENDING.name();
                     }
 
                     allItems.add(new VolunteerHistoryItem(
@@ -162,7 +171,8 @@ public class FragmentVolunteerHistory extends Fragment {
             }
 
             @Override public void onCancelled(@NonNull DatabaseError error) { }
-        });
+        };
+        foodsRef.addValueEventListener(historyListener);
     }
 
     /* ================= FILTER ================= */
@@ -211,8 +221,8 @@ public class FragmentVolunteerHistory extends Fragment {
     /* ================= BOTTOM SHEET ================= */
     private void showDeliveryDetails(VolunteerHistoryItem item) {
 
-        BottomSheetDialog dialog = new BottomSheetDialog(getContext(), R.style.BottomSheetDialogTheme);
-        View v = LayoutInflater.from(getContext()).inflate(R.layout.layout_donation_details_bottom_sheet, null);
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext(), R.style.BottomSheetDialogTheme);
+        View v = LayoutInflater.from(requireContext()).inflate(R.layout.layout_donation_details_bottom_sheet, null);
 
         ImageView ivVolunteerAvatar = v.findViewById(R.id.ivVolunteerAvatar);
         TextView tvVolunteerName = v.findViewById(R.id.tvVolunteerName);
@@ -252,11 +262,19 @@ public class FragmentVolunteerHistory extends Fragment {
     }
 
     private void openDeliveryActionActivity(VolunteerHistoryItem item) {
-        Intent intent = new Intent(getContext(), VolunteerDeliveryActionActivity.class);
+        Intent intent = new Intent(requireContext(), VolunteerDeliveryActionActivity.class);
         intent.putExtra("food_id", item.getFoodId());
         intent.putExtra("food_name", item.getFoodName());
         intent.putExtra("donor_info", item.getDonorInfo());
         startActivity(intent);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (foodsRef != null && historyListener != null) {
+            foodsRef.removeEventListener(historyListener);
+        }
     }
 
     /* ================= MODEL ================= */

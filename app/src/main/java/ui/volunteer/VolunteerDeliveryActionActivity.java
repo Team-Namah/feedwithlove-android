@@ -38,6 +38,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.namah.feedwithlove.R;
+import com.namah.feedwithlove.Status;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -100,6 +101,11 @@ public class VolunteerDeliveryActionActivity extends AppCompatActivity {
 
         // Get food ID from intent
         foodId = getIntent().getStringExtra("food_id");
+        if (foodId == null) {
+            Toast.makeText(this, "Invalid food item. Cannot proceed.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         findViewById(R.id.toolbar).setOnClickListener(v -> finish());
 
@@ -108,10 +114,6 @@ public class VolunteerDeliveryActionActivity extends AppCompatActivity {
         findViewById(R.id.btnSubmitProof).setOnClickListener(v -> {
             if (imageUri == null) {
                 Toast.makeText(this, "Please capture a photo first", Toast.LENGTH_SHORT).show();
-                return;
-            }
-            if (foodId == null) {
-                Toast.makeText(this, "Invalid food item", Toast.LENGTH_SHORT).show();
                 return;
             }
             uploadCompletedImage();
@@ -233,27 +235,30 @@ public class VolunteerDeliveryActionActivity extends AppCompatActivity {
 
                     ref.child("status")
                             .child("delivery")
-                            .setValue("COMPLETED");
+                            .setValue(Status.COMPLETED.name());
 
                     ref.child("status")
                             .child("delivery_valounteer")
-                            .setValue("COMPLETED");
+                            .setValue(Status.COMPLETED.name());
 
-                    Toast.makeText(
-                            VolunteerDeliveryActionActivity.this,
-                            "Delivery Completed Successfully!",
-                            Toast.LENGTH_SHORT).show();
-
-                    finish();
+                    runOnUiThread(() -> {
+                        Toast.makeText(
+                                VolunteerDeliveryActionActivity.this,
+                                "Delivery Completed Successfully!",
+                                Toast.LENGTH_SHORT).show();
+                        finish();
+                    });
                 }
             }
 
             @Override public void onProgressChanged(int id, long b, long t) { }
             @Override public void onError(int id, Exception ex) {
-                Toast.makeText(
-                        VolunteerDeliveryActionActivity.this,
-                        ex.getMessage(),
-                        Toast.LENGTH_SHORT).show();
+                runOnUiThread(() ->
+                    Toast.makeText(
+                            VolunteerDeliveryActionActivity.this,
+                            ex.getMessage(),
+                            Toast.LENGTH_SHORT).show()
+                );
             }
         });
     }

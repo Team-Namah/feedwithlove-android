@@ -44,6 +44,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.namah.feedwithlove.FileUtils;
 import com.namah.feedwithlove.R;
+import com.namah.feedwithlove.Status;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -145,9 +146,11 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(Exception e) {
-                        Toast.makeText(DonorFoodUploadActivity.this,
-                                "Failed to load user data",
-                                Toast.LENGTH_SHORT).show();
+                        runOnUiThread(() ->
+                            Toast.makeText(DonorFoodUploadActivity.this,
+                                    "Failed to load user data",
+                                    Toast.LENGTH_SHORT).show()
+                        );
                     }
                 }
         );
@@ -238,15 +241,19 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
             if (location != null) {
                 currentLat = location.getLatitude();
                 currentLng = location.getLongitude();
-                try {
-                    Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-                    List<Address> list =
-                            geocoder.getFromLocation(currentLat, currentLng, 1);
-                    if (!list.isEmpty())
-                        etLocation.setText(list.get(0).getAddressLine(0));
-                } catch (Exception e) {
-                    toast("Unable to fetch address");
-                }
+                new Thread(() -> {
+                    try {
+                        Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+                        List<Address> list =
+                                geocoder.getFromLocation(currentLat, currentLng, 1);
+                        if (!list.isEmpty()) {
+                            String address = list.get(0).getAddressLine(0);
+                            runOnUiThread(() -> etLocation.setText(address));
+                        }
+                    } catch (Exception e) {
+                        runOnUiThread(() -> toast("Unable to fetch address"));
+                    }
+                }).start();
             }
         });
     }
@@ -289,20 +296,21 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
         data.put("location/pickup/latitude", currentLat);
         data.put("location/pickup/longitude", currentLng);
 
-        data.put("location/drop/address", "null");
-        data.put("location/drop/latitude", "null");
-        data.put("location/drop/longitude", "null");
+        data.put("location/drop/address", Status.NULL.name());
+        data.put("location/drop/latitude", Status.NULL.name());
+        data.put("location/drop/longitude", Status.NULL.name());
 
 
-        data.put("status/state", "AVAILABLE");
-        data.put("status/delivery", "PENDING");
+        data.put("status/state", Status.AVAILABLE.name());
+        data.put("status/delivery", Status.PENDING.name());
+        data.put("status/delivery_valounteer", Status.NULL.name());
         data.put("timestamps/createdAt", now);
         data.put("timestamps/updatedAt", now);
 
 
-        data.put("role/volunteer", "null");
-        data.put("role/receiver", "null");
-        data.put("role/donor", "null");
+        data.put("role/volunteer", Status.NULL.name());
+        data.put("role/receiver", Status.NULL.name());
+        data.put("role/donor", Status.NULL.name());
 
         if (userRole != null && userEmail != null) {
 
@@ -367,14 +375,16 @@ public class DonorFoodUploadActivity extends AppCompatActivity {
                             .child("imageUrl")
                             .setValue(imageUrl);
 
-                    toast("Food uploaded successfully");
-                    finish();
+                    runOnUiThread(() -> {
+                        toast("Food uploaded successfully");
+                        finish();
+                    });
                 }
             }
 
             @Override public void onProgressChanged(int id, long b, long t) {}
             @Override public void onError(int id, Exception ex) {
-                toast(ex.getMessage());
+                runOnUiThread(() -> toast(ex.getMessage()));
             }
         });
     }

@@ -1,5 +1,6 @@
 package ui.donor;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -20,6 +21,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.namah.feedwithlove.R;
+import com.namah.feedwithlove.Status;
 
 import java.util.Map;
 
@@ -28,6 +30,7 @@ public class FragmentDonorHome extends Fragment {
     private TextView tvMealsShared, tvActivePickups;
 
     private DatabaseReference foodsRef;
+    private ValueEventListener statsListener;
 
     private String userEmail = null;
 
@@ -66,9 +69,10 @@ public class FragmentDonorHome extends Fragment {
                 new Callback<Map<String, String>>() {
                     @Override
                     public void onResult(Map<String, String> attributes) {
-                        if (!isAdded()) return;
+                        Activity activity = getActivity();
+                        if (activity == null || !isAdded()) return;
 
-                        requireActivity().runOnUiThread(() -> {
+                        activity.runOnUiThread(() -> {
                             userEmail = attributes.get("email");
                             loadStats(); // ✅ Load stats after email
                         });
@@ -76,9 +80,13 @@ public class FragmentDonorHome extends Fragment {
 
                     @Override
                     public void onError(Exception e) {
-                        Toast.makeText(getContext(),
-                                "Failed to load user info",
-                                Toast.LENGTH_SHORT).show();
+                        Activity activity = getActivity();
+                        if (activity == null || !isAdded()) return;
+                        activity.runOnUiThread(() ->
+                            Toast.makeText(getContext(),
+                                    "Failed to load user info",
+                                    Toast.LENGTH_SHORT).show()
+                        );
                     }
                 }
         );
@@ -89,9 +97,14 @@ public class FragmentDonorHome extends Fragment {
 
         if (userEmail == null) return;
 
-        foodsRef.addValueEventListener(new ValueEventListener() {
+        if (statsListener != null) {
+            foodsRef.removeEventListener(statsListener);
+        }
+
+        statsListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
 
                 int mealsShared = 0;
                 int activePickups = 0;
@@ -112,7 +125,7 @@ public class FragmentDonorHome extends Fragment {
                             snap.child("status/delivery").getValue(String.class);
 
                     if (delivery == null ||
-                            delivery.equalsIgnoreCase("PENDING")) {
+                            delivery.equalsIgnoreCase(Status.PENDING.name())) {
                         activePickups++;
                     }
                 }
@@ -123,6 +136,15 @@ public class FragmentDonorHome extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) { }
-        });
+        };
+        foodsRef.addValueEventListener(statsListener);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (foodsRef != null && statsListener != null) {
+            foodsRef.removeEventListener(statsListener);
+        }
     }
 }

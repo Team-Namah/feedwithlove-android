@@ -1,5 +1,6 @@
 package ui.receiver;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -19,6 +20,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.namah.feedwithlove.R;
+import com.namah.feedwithlove.Status;
 
 import java.util.Map;
 
@@ -28,6 +30,7 @@ public class FragmentReceiverHome extends Fragment {
     private TextView tvMealsPendingCount;
 
     private DatabaseReference foodsRef;
+    private ValueEventListener statsListener;
     private String receiverEmail;
 
     public FragmentReceiverHome() {
@@ -68,8 +71,9 @@ public class FragmentReceiverHome extends Fragment {
         AWSMobileClient.getInstance().getUserAttributes(new Callback<Map<String, String>>() {
             @Override
             public void onResult(Map<String, String> attributes) {
-                if (!isAdded()) return;
-                requireActivity().runOnUiThread(() -> {
+                Activity activity = getActivity();
+                if (activity == null || !isAdded()) return;
+                activity.runOnUiThread(() -> {
                     receiverEmail = attributes.get("email");
                     loadStats();
                 });
@@ -85,9 +89,14 @@ public class FragmentReceiverHome extends Fragment {
 
         if (receiverEmail == null) return;
 
-        foodsRef.addValueEventListener(new ValueEventListener() {
+        if (statsListener != null) {
+            foodsRef.removeEventListener(statsListener);
+        }
+
+        statsListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
 
                 int completedCount = 0;
                 int pendingCount = 0;
@@ -104,7 +113,7 @@ public class FragmentReceiverHome extends Fragment {
                             snap.child("status/delivery_valounteer").getValue(String.class);
 
                     if (volunteerStatus == null ||
-                            volunteerStatus.equalsIgnoreCase("NULL")) {
+                            volunteerStatus.equalsIgnoreCase(Status.NULL.name())) {
                         pendingCount++;
                     } else {
                         completedCount++;
@@ -117,6 +126,15 @@ public class FragmentReceiverHome extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) { }
-        });
+        };
+        foodsRef.addValueEventListener(statsListener);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (foodsRef != null && statsListener != null) {
+            foodsRef.removeEventListener(statsListener);
+        }
     }
 }

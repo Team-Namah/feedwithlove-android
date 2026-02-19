@@ -1,5 +1,6 @@
 package ui.receiver;
 
+import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -28,6 +29,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.namah.feedwithlove.R;
+import com.namah.feedwithlove.Status;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
@@ -46,6 +48,7 @@ public class FragmentReceiverHistory extends Fragment {
     private final List<ReceiverHistoryItem> allItems = new ArrayList<>();
 
     private DatabaseReference foodsRef;
+    private ValueEventListener historyListener;
     private String userEmail;
     private String currentFilter = "All";
 
@@ -62,7 +65,7 @@ public class FragmentReceiverHistory extends Fragment {
         rvReceiverHistory = view.findViewById(R.id.rvReceiverHistory);
         chipGroupFilters = view.findViewById(R.id.chipGroupFilters);
 
-        rvReceiverHistory.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvReceiverHistory.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new ReceiverHistoryAdapter(new ArrayList<>(), this::showMealDetails);
         rvReceiverHistory.setAdapter(adapter);
 
@@ -93,8 +96,9 @@ public class FragmentReceiverHistory extends Fragment {
         AWSMobileClient.getInstance().getUserAttributes(new Callback<Map<String, String>>() {
             @Override
             public void onResult(Map<String, String> attributes) {
-                if (!isAdded()) return;
-                requireActivity().runOnUiThread(() -> {
+                Activity activity = getActivity();
+                if (activity == null || !isAdded()) return;
+                activity.runOnUiThread(() -> {
                     userEmail = attributes.get("email");
                     loadData();
                 });
@@ -102,7 +106,11 @@ public class FragmentReceiverHistory extends Fragment {
 
             @Override
             public void onError(Exception e) {
-                Toast.makeText(getContext(), "Failed to load user info", Toast.LENGTH_SHORT).show();
+                Activity activity = getActivity();
+                if (activity == null || !isAdded()) return;
+                activity.runOnUiThread(() ->
+                        Toast.makeText(getContext(), "Failed to load user info", Toast.LENGTH_SHORT).show()
+                );
             }
         });
     }
@@ -111,9 +119,14 @@ public class FragmentReceiverHistory extends Fragment {
     private void loadData() {
         if (userEmail == null) return;
 
-        foodsRef.addValueEventListener(new ValueEventListener() {
+        if (historyListener != null) {
+            foodsRef.removeEventListener(historyListener);
+        }
+
+        historyListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
 
                 allItems.clear();
 
@@ -132,11 +145,11 @@ public class FragmentReceiverHistory extends Fragment {
 
                     Long time = snap.child("timestamps/createdAt").getValue(Long.class);
 
-                    String status = (volunteerStatus == null || volunteerStatus.equalsIgnoreCase("NULL"))
-                            ? "PENDING"
-                            : "COMPLETED";
+                    String status = (volunteerStatus == null || volunteerStatus.equalsIgnoreCase(Status.NULL.name()))
+                            ? Status.PENDING.name()
+                            : Status.COMPLETED.name();
 
-                    String volunteerText = status.equals("PENDING")
+                    String volunteerText = status.equals(Status.PENDING.name())
                             ? "Volunteer: Pending..."
                             : "Volunteer: " + (volunteerRole == null ? "Assigned" : volunteerRole);
 
@@ -155,9 +168,9 @@ public class FragmentReceiverHistory extends Fragment {
                 filter(currentFilter);
             }
 
-            @Override
-            public void onCancelled(@NonNull DatabaseError error) { }
-        });
+            @Override public void onCancelled(@NonNull DatabaseError error) { }
+        };
+        foodsRef.addValueEventListener(historyListener);
     }
 
     /* ---------------- FILTER ---------------- */
@@ -195,9 +208,9 @@ public class FragmentReceiverHistory extends Fragment {
     private void showMealDetails(ReceiverHistoryItem item) {
 
         BottomSheetDialog dialog =
-                new BottomSheetDialog(getContext(), R.style.BottomSheetDialogTheme);
+                new BottomSheetDialog(requireContext(), R.style.BottomSheetDialogTheme);
 
-        View v = LayoutInflater.from(getContext())
+        View v = LayoutInflater.from(requireContext())
                 .inflate(R.layout.layout_donation_details_bottom_sheet, null);
 
         ImageView ivImage = v.findViewById(R.id.foodimg);
@@ -231,6 +244,14 @@ public class FragmentReceiverHistory extends Fragment {
             }
         });
         dialog.show();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (foodsRef != null && historyListener != null) {
+            foodsRef.removeEventListener(historyListener);
+        }
     }
 
     /* ---------------- MODEL ---------------- */

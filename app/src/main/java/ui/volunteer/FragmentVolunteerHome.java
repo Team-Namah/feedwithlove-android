@@ -1,5 +1,6 @@
 package ui.volunteer;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,9 +17,12 @@ import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
 import com.google.android.material.card.MaterialCardView;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.namah.feedwithlove.R;
+import com.namah.feedwithlove.Status;
 
 import java.util.Map;
 
@@ -28,6 +32,7 @@ public class FragmentVolunteerHome extends Fragment {
     private MaterialCardView cardLevel;
 
     private DatabaseReference foodsRef;
+    private ValueEventListener deliveryListener;
     private String userEmail;
     private int totalDeliveries = 0;
 
@@ -58,8 +63,12 @@ public class FragmentVolunteerHome extends Fragment {
                 new Callback<Map<String, String>>() {
                     @Override
                     public void onResult(Map<String, String> attrs) {
-                        userEmail = attrs.get("email");
-                        loadDeliveries();
+                        Activity activity = getActivity();
+                        if (activity == null || !isAdded()) return;
+                        activity.runOnUiThread(() -> {
+                            userEmail = attrs.get("email");
+                            loadDeliveries();
+                        });
                     }
                     @Override public void onError(Exception e) { }
                 }
@@ -68,9 +77,16 @@ public class FragmentVolunteerHome extends Fragment {
 
     /* ================= DELIVERIES ================= */
     private void loadDeliveries() {
-        foodsRef.addValueEventListener(new com.google.firebase.database.ValueEventListener() {
+        if (userEmail == null) return;
+
+        if (deliveryListener != null) {
+            foodsRef.removeEventListener(deliveryListener);
+        }
+
+        deliveryListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
 
                 totalDeliveries = 0;
 
@@ -86,7 +102,7 @@ public class FragmentVolunteerHome extends Fragment {
                     if (userEmail != null &&
                             userEmail.equalsIgnoreCase(volunteer) &&
                             status != null &&
-                            status.equalsIgnoreCase("COMPLETED")) {
+                            status.equalsIgnoreCase(Status.COMPLETED.name())) {
 
                         totalDeliveries++;
                     }
@@ -95,8 +111,9 @@ public class FragmentVolunteerHome extends Fragment {
                 updateUI();
             }
 
-            @Override public void onCancelled(@NonNull com.google.firebase.database.DatabaseError error) { }
-        });
+            @Override public void onCancelled(@NonNull DatabaseError error) { }
+        };
+        foodsRef.addValueEventListener(deliveryListener);
     }
 
     /* ================= LEVEL LOGIC ================= */
@@ -150,6 +167,14 @@ public class FragmentVolunteerHome extends Fragment {
                 .setMessage(message)
                 .setPositiveButton("Keep Helping 💪", null)
                 .show();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (foodsRef != null && deliveryListener != null) {
+            foodsRef.removeEventListener(deliveryListener);
+        }
     }
 
     /* ================= MODEL ================= */

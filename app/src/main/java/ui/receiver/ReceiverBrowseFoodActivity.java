@@ -32,6 +32,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.namah.feedwithlove.R;
+import com.namah.feedwithlove.Status;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,6 +42,7 @@ public class ReceiverBrowseFoodActivity extends AppCompatActivity {
     private RecyclerView rvBrowseFood;
     private FoodBrowseAdapter adapter;
     private DatabaseReference foodsRef;
+    private ValueEventListener foodsListener;
     private final List<FoodItem> foodList = new ArrayList<>();
 
     @Override
@@ -71,58 +73,64 @@ public class ReceiverBrowseFoodActivity extends AppCompatActivity {
 
     private void loadAvailableFoods() {
 
-        foodsRef.orderByChild("status/state")
-                .equalTo("AVAILABLE")
-                .addValueEventListener(new ValueEventListener() {
+        if (foodsListener != null) {
+            foodsRef.removeEventListener(foodsListener);
+        }
 
-                    @Override
-                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+        foodsListener = new ValueEventListener() {
 
-                        foodList.clear();
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
 
-                        for (DataSnapshot foodSnap : snapshot.getChildren()) {
+                foodList.clear();
 
-                            String foodId = foodSnap.getKey();
+                for (DataSnapshot foodSnap : snapshot.getChildren()) {
 
-                            String title = foodSnap.child("basic/title").getValue(String.class);
-                            String quantity = foodSnap.child("basic/quantity").getValue(String.class);
-                            String location = foodSnap.child("location/pickup/address").getValue(String.class);
-                            String time = foodSnap.child("basic/expiryTime").getValue(String.class);
-                            String imageUrl = foodSnap.child("basic/imageUrl").getValue(String.class);
+                    String state = foodSnap.child("status/state").getValue(String.class);
+                    if (state == null || !state.equalsIgnoreCase(Status.AVAILABLE.name())) continue;
 
-                            String donorEmail =
-                                    foodSnap.child("role/donor").getValue(String.class);
+                    String foodId = foodSnap.getKey();
 
-                            if (donorEmail == null) donorEmail = "Unknown Donor";
+                    String title = foodSnap.child("basic/title").getValue(String.class);
+                    String quantity = foodSnap.child("basic/quantity").getValue(String.class);
+                    String location = foodSnap.child("location/pickup/address").getValue(String.class);
+                    String time = foodSnap.child("basic/expiryTime").getValue(String.class);
+                    String imageUrl = foodSnap.child("basic/imageUrl").getValue(String.class);
 
-                            foodList.add(new FoodItem(
-                                    foodId,
-                                    title,
-                                    quantity,
-                                    location,
-                                    "Till " + time,
-                                    "Donor: " + donorEmail,
-                                    imageUrl
-                            ));
-                        }
+                    String donorEmail =
+                            foodSnap.child("role/donor").getValue(String.class);
 
-                        adapter = new FoodBrowseAdapter(
-                                foodList,
-                                ReceiverBrowseFoodActivity.this::showFoodDetails
-                        );
+                    if (donorEmail == null) donorEmail = "Unknown Donor";
 
-                        rvBrowseFood.setAdapter(adapter);
-                    }
+                    foodList.add(new FoodItem(
+                            foodId,
+                            title,
+                            quantity,
+                            location,
+                            "Till " + time,
+                            "Donor: " + donorEmail,
+                            imageUrl
+                    ));
+                }
 
-                    @Override
-                    public void onCancelled(@NonNull DatabaseError error) {
-                        Toast.makeText(
-                                ReceiverBrowseFoodActivity.this,
-                                error.getMessage(),
-                                Toast.LENGTH_SHORT
-                        ).show();
-                    }
-                });
+                adapter = new FoodBrowseAdapter(
+                        foodList,
+                        ReceiverBrowseFoodActivity.this::showFoodDetails
+                );
+
+                rvBrowseFood.setAdapter(adapter);
+            }
+
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {
+                Toast.makeText(
+                        ReceiverBrowseFoodActivity.this,
+                        error.getMessage(),
+                        Toast.LENGTH_SHORT
+                ).show();
+            }
+        };
+        foodsRef.addValueEventListener(foodsListener);
     }
 
     private void showFoodDetails(FoodItem item) {
@@ -195,6 +203,14 @@ public class ReceiverBrowseFoodActivity extends AppCompatActivity {
         });
 
         bottomSheetDialog.show();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (foodsRef != null && foodsListener != null) {
+            foodsRef.removeEventListener(foodsListener);
+        }
     }
 
     /* ================= MODEL ================= */

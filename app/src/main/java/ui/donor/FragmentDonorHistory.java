@@ -1,5 +1,6 @@
 package ui.donor;
 
+import android.app.Activity;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -23,6 +24,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.namah.feedwithlove.R;
+import com.namah.feedwithlove.Status;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
@@ -43,6 +45,7 @@ public class FragmentDonorHistory extends Fragment {
     private String userRole = null;
 
     private DatabaseReference foodsRef;
+    private ValueEventListener historyListener;
 
     // 🔥 IMPORTANT: track current selected filter
     private String currentFilter = "All";
@@ -61,13 +64,12 @@ public class FragmentDonorHistory extends Fragment {
         rvHistory = view.findViewById(R.id.rvHistory);
         chipGroupFilters = view.findViewById(R.id.chipGroupFilters);
 
-        rvHistory.setLayoutManager(new LinearLayoutManager(getContext()));
+        rvHistory.setLayoutManager(new LinearLayoutManager(requireContext()));
         adapter = new DonationHistoryAdapter(new ArrayList<>());
         rvHistory.setAdapter(adapter);
 
         foodsRef = FirebaseDatabase.getInstance().getReference("foods");
 
-//        loadData();
         loadUserDetails();
         // 🔥 Chip selection listener (STORE current filter)
         chipGroupFilters.setOnCheckedChangeListener((group, checkedId) -> {
@@ -98,9 +100,10 @@ public class FragmentDonorHistory extends Fragment {
                 new Callback<Map<String, String>>() {
                     @Override
                     public void onResult(Map<String, String> attributes) {
-                        if (!isAdded()) return;
+                        Activity activity = getActivity();
+                        if (activity == null || !isAdded()) return;
 
-                        requireActivity().runOnUiThread(() -> {
+                        activity.runOnUiThread(() -> {
                             userEmail = attributes.get("email");
                             userRole  = attributes.get("custom:role");
 
@@ -111,9 +114,13 @@ public class FragmentDonorHistory extends Fragment {
 
                     @Override
                     public void onError(Exception e) {
-                        Toast.makeText(getContext(),
-                                "Failed to load user info",
-                                Toast.LENGTH_SHORT).show();
+                        Activity activity = getActivity();
+                        if (activity == null || !isAdded()) return;
+                        activity.runOnUiThread(() ->
+                                Toast.makeText(getContext(),
+                                        "Failed to load user info",
+                                        Toast.LENGTH_SHORT).show()
+                        );
                     }
                 }
         );
@@ -125,9 +132,14 @@ public class FragmentDonorHistory extends Fragment {
 
         if (userEmail == null) return;
 
-        foodsRef.addValueEventListener(new ValueEventListener() {
+        if (historyListener != null) {
+            foodsRef.removeEventListener(historyListener);
+        }
+
+        historyListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (!isAdded()) return;
 
                 allItems.clear();
 
@@ -154,11 +166,13 @@ public class FragmentDonorHistory extends Fragment {
                     Long time =
                             snap.child("timestamps/createdAt").getValue(Long.class);
 
+                    String statusText = (delivery == null) ? Status.PENDING.name() : delivery.toUpperCase();
+
                     allItems.add(new DonationHistoryItemModel(
                             title,
                             formatTime(time),
                             address,
-                            delivery == null ? "PENDING" : delivery.toUpperCase(),
+                            statusText,
                             imageUrl
                     ));
                 }
@@ -169,7 +183,8 @@ public class FragmentDonorHistory extends Fragment {
 
             @Override
             public void onCancelled(@NonNull DatabaseError error) { }
-        });
+        };
+        foodsRef.addValueEventListener(historyListener);
     }
 
 
@@ -213,6 +228,14 @@ public class FragmentDonorHistory extends Fragment {
         return new SimpleDateFormat(
                 "dd MMM yyyy • hh:mm a",
                 Locale.getDefault()
-        ).format(new Date(t));
+                ).format(new Date(t));
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (foodsRef != null && historyListener != null) {
+            foodsRef.removeEventListener(historyListener);
+        }
     }
 }

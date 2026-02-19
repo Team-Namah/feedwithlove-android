@@ -25,6 +25,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.namah.feedwithlove.R;
+import com.namah.feedwithlove.Status;
 
 import java.util.HashMap;
 import java.util.List;
@@ -107,9 +108,11 @@ public class ReceiverOrderDetailsActivity extends AppCompatActivity {
 
                     @Override
                     public void onError(Exception e) {
-                        Toast.makeText(ReceiverOrderDetailsActivity.this,
-                                "Failed to load user email",
-                                Toast.LENGTH_SHORT).show();
+                        runOnUiThread(() ->
+                            Toast.makeText(ReceiverOrderDetailsActivity.this,
+                                    "Failed to load user email",
+                                    Toast.LENGTH_SHORT).show()
+                        );
                     }
                 }
         );
@@ -150,23 +153,22 @@ public class ReceiverOrderDetailsActivity extends AppCompatActivity {
 
     private void convertToAddress(double lat, double lng) {
 
-        try {
-            Geocoder geocoder = new Geocoder(this, Locale.getDefault());
-            List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
+        new Thread(() -> {
+            try {
+                Geocoder geocoder = new Geocoder(this, Locale.getDefault());
+                List<Address> addresses = geocoder.getFromLocation(lat, lng, 1);
 
-            if (addresses != null && !addresses.isEmpty()) {
-                etDropLocation.setText(addresses.get(0).getAddressLine(0));
-            } else {
-                Toast.makeText(this,
-                        "Address not found",
-                        Toast.LENGTH_SHORT).show();
+                if (addresses != null && !addresses.isEmpty()) {
+                    String addressLine = addresses.get(0).getAddressLine(0);
+                    runOnUiThread(() -> etDropLocation.setText(addressLine));
+                } else {
+                    runOnUiThread(() -> Toast.makeText(this, "Address not found", Toast.LENGTH_SHORT).show());
+                }
+
+            } catch (Exception e) {
+                runOnUiThread(() -> Toast.makeText(this, "Geocoder failed", Toast.LENGTH_SHORT).show());
             }
-
-        } catch (Exception e) {
-            Toast.makeText(this,
-                    "Geocoder failed",
-                    Toast.LENGTH_SHORT).show();
-        }
+        }).start();
     }
 
     /* ================= PERMISSION RESULT ================= */
@@ -224,9 +226,9 @@ public class ReceiverOrderDetailsActivity extends AppCompatActivity {
 
         // ✅ Receiver & status
         data.put("role/receiver", receiverEmail);
-        data.put("status/state", "UNAVAILABLE");
-        data.put("status/delivery_valounteer", "NULL");
-        data.put("status/delivery", "PENDING");
+        data.put("status/state", Status.UNAVAILABLE.name());
+        data.put("status/delivery_valounteer", Status.NULL.name());
+        data.put("status/delivery", Status.PENDING.name());
 
         // ✅ Timestamp
         data.put("timestamps/updatedAt", System.currentTimeMillis());

@@ -33,6 +33,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.namah.feedwithlove.R;
+import com.namah.feedwithlove.Status;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +44,7 @@ public class AvailableDeliveriesActivity extends AppCompatActivity {
     private RecyclerView rvAvailableDeliveries;
     private DeliveryAdapter adapter;
     private DatabaseReference foodsRef;
+    private ValueEventListener deliveriesListener;
     private final List<DeliveryItem> deliveryList = new ArrayList<>();
 
     @Override
@@ -80,7 +82,11 @@ public class AvailableDeliveriesActivity extends AppCompatActivity {
 
     private void loadAvailableDeliveries() {
 
-        foodsRef.addValueEventListener(new ValueEventListener() {
+        if (deliveriesListener != null) {
+            foodsRef.removeEventListener(deliveriesListener);
+        }
+
+        deliveriesListener = new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
 
@@ -94,7 +100,7 @@ public class AvailableDeliveriesActivity extends AppCompatActivity {
 
                     // ✅ ONLY FILTER
                     if (deliveryVolunteer == null) continue;
-                    if (!deliveryVolunteer.equalsIgnoreCase("NULL")) continue;
+                    if (!deliveryVolunteer.equalsIgnoreCase(Status.NULL.name())) continue;
 
                     String foodId = foodSnap.getKey();
                     String title = foodSnap.child("basic/title").getValue(String.class);
@@ -136,7 +142,8 @@ public class AvailableDeliveriesActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT
                 ).show();
             }
-        });
+        };
+        foodsRef.addValueEventListener(deliveriesListener);
     }
 
     /* ================= BOTTOM SHEET ================= */
@@ -199,7 +206,7 @@ public class AvailableDeliveriesActivity extends AppCompatActivity {
             foodsRef.child(item.getFoodId())
                     .child("status")
                     .child("delivery_valounteer")
-                    .setValue("PENDING");
+                    .setValue(Status.PENDING.name());
 
             // 2️⃣ Assign volunteer email
             assignVolunteerEmail(item.getFoodId());
@@ -257,6 +264,14 @@ public class AvailableDeliveriesActivity extends AppCompatActivity {
                     }
                 }
         );
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        if (foodsRef != null && deliveriesListener != null) {
+            foodsRef.removeEventListener(deliveriesListener);
+        }
     }
 
     /* ================= MODEL ================= */

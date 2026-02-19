@@ -39,6 +39,11 @@ public class VerifyActivity extends AppCompatActivity {
         setContentView(R.layout.activity_verify);
 
         email = getIntent().getStringExtra("email");
+        if (email == null) {
+            Toast.makeText(this, "Email is missing. Cannot verify.", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
 
         btnVerify = findViewById(R.id.btnVerify);
         findViewById(R.id.btnBack).setOnClickListener(v -> {
@@ -77,8 +82,7 @@ public class VerifyActivity extends AppCompatActivity {
                 }
             }
 
-            @Override
-            public void afterTextChanged(Editable s) {}
+            @Override public void afterTextChanged(Editable s) {}
         });
 
         btnVerify.setOnClickListener(v -> verifyCode());
