@@ -84,23 +84,6 @@ public class FragmentVolunteerHistory extends Fragment {
         loadVolunteerProfile(); // 👈 load Cognito profile
         setupFilters();
     }
-    private void loadVolunteerAvatar(ImageView imageView, String imageUrl) {
-
-        if (imageUrl != null && imageUrl.startsWith("http")) {
-
-            Picasso.get()
-                    .load(imageUrl)
-                    .placeholder(R.drawable.bg_splash)
-                    .error(R.drawable.bg_splash)
-                    .fit()
-                    .centerCrop()
-                    .into(imageView);
-
-        } else {
-            imageView.setImageResource(R.drawable.bg_splash);
-        }
-    }
-
 
     /* ================= LOAD VOLUNTEER ================= */
     private void loadVolunteerProfile() {
@@ -111,19 +94,18 @@ public class FragmentVolunteerHistory extends Fragment {
                 new Callback<Map<String, String>>() {
                     @Override
                     public void onResult(Map<String, String> attributes) {
+                        if (!isAdded()) return;
+                        requireActivity().runOnUiThread(() -> {
+                            volunteerName = attributes.get("name");
+                            userEmail = attributes.get("email");
 
-                        volunteerName = attributes.get("name");
-                        userEmail = attributes.get("email");
+                            volunteerAvatar = attributes.get("picture");
+                            if (volunteerAvatar == null) {
+                                volunteerAvatar = attributes.get("custom:profileImage");
+                            }
 
-                        // 🔥 TRY BOTH (COGNITO REALITY)
-                        volunteerAvatar = attributes.get("picture");
-
-                        if (volunteerAvatar == null) {
-                            volunteerAvatar =
-                                    attributes.get("custom:profileImage");
-                        }
-
-                        loadData();
+                            loadData();
+                        });
                     }
 
                     @Override
@@ -145,41 +127,28 @@ public class FragmentVolunteerHistory extends Fragment {
 
                 for (DataSnapshot snap : snapshot.getChildren()) {
 
-                    String volunteer =
-                            snap.child("role/volunteer").getValue(String.class);
+                    String volunteer = snap.child("role/volunteer").getValue(String.class);
 
-                    if (volunteer == null ||
-                            !volunteer.equalsIgnoreCase(userEmail))
+                    if (volunteer == null || !volunteer.equalsIgnoreCase(userEmail))
                         continue;
 
-                    String title =
-                            snap.child("basic/title").getValue(String.class);
-
-                    String imageUrl =
-                            snap.child("basic/imageUrl").getValue(String.class);
-
-                    String address =
-                            snap.child("location/pickup/address")
-                                    .getValue(String.class);
-
-                    String donor =
-                            snap.child("role/donor").getValue(String.class);
-
-                    String status =
-                            snap.child("status/delivery_valounteer")
-                                    .getValue(String.class);
-
-                    Long time =
-                            snap.child("timestamps/createdAt")
-                                    .getValue(Long.class);
+                    String foodId = snap.getKey();
+                    String title = snap.child("basic/title").getValue(String.class);
+                    String imageUrl = snap.child("basic/imageUrl").getValue(String.class);
+                    String address = snap.child("location/pickup/address").getValue(String.class);
+                    String donor = snap.child("role/donor").getValue(String.class);
+                    String status = snap.child("status/delivery_valounteer").getValue(String.class);
+                    Long time = snap.child("timestamps/createdAt").getValue(Long.class);
 
                     if (status == null || status.equalsIgnoreCase("PENDING")) {
                         status = "PENDING";
-                    } else {
-                        status = "COMPLETED";
+                    } else if (!status.equalsIgnoreCase("COMPLETED")) {
+                         // Default to pending if it's something else like "ASSIGNED"
+                         status = "PENDING";
                     }
 
                     allItems.add(new VolunteerHistoryItem(
+                            foodId,
                             title == null ? "" : title,
                             formatTime(time),
                             address == null ? "N/A" : address,
@@ -242,38 +211,24 @@ public class FragmentVolunteerHistory extends Fragment {
     /* ================= BOTTOM SHEET ================= */
     private void showDeliveryDetails(VolunteerHistoryItem item) {
 
-        BottomSheetDialog dialog =
-                new BottomSheetDialog(getContext(),
-                        R.style.BottomSheetDialogTheme);
+        BottomSheetDialog dialog = new BottomSheetDialog(getContext(), R.style.BottomSheetDialogTheme);
+        View v = LayoutInflater.from(getContext()).inflate(R.layout.layout_donation_details_bottom_sheet, null);
 
-        View v = LayoutInflater.from(getContext())
-                .inflate(R.layout.layout_donation_details_bottom_sheet, null);
-
-        // 🔹 Volunteer info
         ImageView ivVolunteerAvatar = v.findViewById(R.id.ivVolunteerAvatar);
         TextView tvVolunteerName = v.findViewById(R.id.tvVolunteerName);
         TextView tvVolunteerEmail = v.findViewById(R.id.tvVolunteerEmail);
 
-        tvVolunteerName.setText(volunteerName != null ?
-                volunteerName.toUpperCase() : "VOLUNTEER");
-
+        tvVolunteerName.setText(volunteerName != null ? volunteerName.toUpperCase() : "VOLUNTEER");
         tvVolunteerEmail.setText(userEmail != null ? userEmail : "");
 
         if (volunteerAvatar != null && !volunteerAvatar.isEmpty()) {
-            Picasso.get().load(volunteerAvatar)
-                    .placeholder(R.drawable.bg_splash)
-                    .into(ivVolunteerAvatar);
+            Picasso.get().load(volunteerAvatar).placeholder(R.drawable.bg_splash).into(ivVolunteerAvatar);
         }
 
-        // 🔹 Food details
-        ((TextView) v.findViewById(R.id.tvDetailFoodName))
-                .setText(item.getFoodName());
-        ((TextView) v.findViewById(R.id.tvDetailLocation))
-                .setText(item.getLocation());
-        ((TextView) v.findViewById(R.id.tvDetailDateTime))
-                .setText(item.getDateTime());
-        ((TextView) v.findViewById(R.id.tvDetailStatus))
-                .setText(item.getStatus());
+        ((TextView) v.findViewById(R.id.tvDetailFoodName)).setText(item.getFoodName());
+        ((TextView) v.findViewById(R.id.tvDetailLocation)).setText(item.getLocation());
+        ((TextView) v.findViewById(R.id.tvDetailDateTime)).setText(item.getDateTime());
+        ((TextView) v.findViewById(R.id.tvDetailStatus)).setText(item.getStatus());
 
         ImageView img = v.findViewById(R.id.foodimg);
         if (item.getImageUrl() != null && !item.getImageUrl().isEmpty()) {
@@ -282,29 +237,23 @@ public class FragmentVolunteerHistory extends Fragment {
 
         dialog.setContentView(v);
         dialog.setOnShowListener(d -> {
-            FrameLayout sheet =
-                    dialog.findViewById(
-                            com.google.android.material.R.id.design_bottom_sheet);
-            BottomSheetBehavior.from(sheet)
-                    .setState(BottomSheetBehavior.STATE_EXPANDED);
+            FrameLayout sheet = dialog.findViewById(com.google.android.material.R.id.design_bottom_sheet);
+            if (sheet != null) {
+                BottomSheetBehavior.from(sheet).setState(BottomSheetBehavior.STATE_EXPANDED);
+            }
         });
-
         dialog.show();
     }
 
     /* ================= HELPERS ================= */
     private String formatTime(Long t) {
         if (t == null) return "";
-        return new SimpleDateFormat(
-                "dd MMM yyyy • hh:mm a",
-                Locale.getDefault()
-        ).format(new Date(t));
+        return new SimpleDateFormat("dd MMM yyyy • hh:mm a", Locale.getDefault()).format(new Date(t));
     }
 
     private void openDeliveryActionActivity(VolunteerHistoryItem item) {
-        Intent intent =
-                new Intent(getContext(),
-                        VolunteerDeliveryActionActivity.class);
+        Intent intent = new Intent(getContext(), VolunteerDeliveryActionActivity.class);
+        intent.putExtra("food_id", item.getFoodId());
         intent.putExtra("food_name", item.getFoodName());
         intent.putExtra("donor_info", item.getDonorInfo());
         startActivity(intent);
@@ -313,15 +262,10 @@ public class FragmentVolunteerHistory extends Fragment {
     /* ================= MODEL ================= */
     public static class VolunteerHistoryItem {
 
-        private final String foodName, dateTime,
-                location, status, donorInfo, imageUrl;
+        private final String foodId, foodName, dateTime, location, status, donorInfo, imageUrl;
 
-        public VolunteerHistoryItem(String foodName,
-                                    String dateTime,
-                                    String location,
-                                    String status,
-                                    String donorInfo,
-                                    String imageUrl) {
+        public VolunteerHistoryItem(String foodId, String foodName, String dateTime, String location, String status, String donorInfo, String imageUrl) {
+            this.foodId = foodId;
             this.foodName = foodName;
             this.dateTime = dateTime;
             this.location = location;
@@ -330,6 +274,7 @@ public class FragmentVolunteerHistory extends Fragment {
             this.imageUrl = imageUrl;
         }
 
+        public String getFoodId() { return foodId; }
         public String getFoodName() { return foodName; }
         public String getDateTime() { return dateTime; }
         public String getLocation() { return location; }
