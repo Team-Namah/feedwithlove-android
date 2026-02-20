@@ -55,7 +55,7 @@ public class EditReceiverProfileActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit_donor_profile);
+        setContentView(R.layout.activity_edit_receiver_profile);
 
         EdgeToEdge.enable(
                 this,

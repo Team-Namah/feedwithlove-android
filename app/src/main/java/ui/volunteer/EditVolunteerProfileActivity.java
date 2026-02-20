@@ -55,7 +55,7 @@ public class EditVolunteerProfileActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_edit_donor_profile);
+        setContentView(R.layout.activity_edit_volunteer_profile);
 
         EdgeToEdge.enable(
                 this,

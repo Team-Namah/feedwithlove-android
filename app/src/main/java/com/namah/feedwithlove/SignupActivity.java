@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -16,6 +17,9 @@ import androidx.activity.EdgeToEdge;
 import androidx.activity.SystemBarStyle;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -39,6 +43,7 @@ public class SignupActivity extends AppCompatActivity {
     TextInputEditText etPassword;
     Button btnSignup;
     TextView tvSelectedRole;
+    ScrollView signupScrollView;
 
     private String selectedRole = "";
     private final String[] roles = {"DONOR", "VOLUNTEER", "RECEIVER"};
@@ -56,11 +61,39 @@ public class SignupActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_signup);
 
+        signupScrollView = findViewById(R.id.signupScrollView);
         etName = findViewById(R.id.etName);
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
         btnSignup = findViewById(R.id.btnSignup);
         tvSelectedRole = findViewById(R.id.tvRoleSelected);
+
+        // Handle Keyboard Insets to dynamically adjust padding and scroll focused fields above keyboard
+        ViewCompat.setOnApplyWindowInsetsListener(signupScrollView, (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.ime());
+            boolean isKeyboardVisible = windowInsets.isVisible(WindowInsetsCompat.Type.ime());
+            
+            v.setPadding(v.getPaddingLeft(), v.getPaddingTop(), v.getPaddingRight(), insets.bottom);
+            
+            // Auto-scroll to password label when keyboard appears and password is focused
+            if (isKeyboardVisible && etPassword.isFocused()) {
+                v.postDelayed(() -> signupScrollView.smoothScrollTo(0, findViewById(R.id.tvPasswordLabel).getTop()), 100);
+            } else if (!isKeyboardVisible) {
+                // Return to original position when keyboard is dismissed
+                v.post(() -> signupScrollView.smoothScrollTo(0, 0));
+            }
+            
+            return windowInsets;
+        });
+
+        // Trigger scroll immediately when the password field is clicked/focused
+        etPassword.setOnFocusChangeListener((v, hasFocus) -> {
+            if (hasFocus) {
+                signupScrollView.postDelayed(() -> {
+                    signupScrollView.smoothScrollTo(0, findViewById(R.id.tvPasswordLabel).getTop());
+                }, 300);
+            }
+        });
 
         dialog = new BottomSheetDialog(this);
         sheetView = getLayoutInflater().inflate(R.layout.layout_role_picker_sheet, null);

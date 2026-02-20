@@ -6,6 +6,11 @@
     android:layout_height="match_parent"
     android:background="@color/love_bg_warm"
     android:fillViewport="true"
+    android:isScrollContainer="true"
+    android:fitsSystemWindows="true"
+    android:descendantFocusability="beforeDescendants"
+    android:focusableInTouchMode="true"
+    android:id="@+id/signupScrollView"
     tools:context=".SignupActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout

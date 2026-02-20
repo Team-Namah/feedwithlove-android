@@ -23,11 +23,13 @@ import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUser;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserPool;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.continuations.ForgotPasswordContinuation;
 import com.amazonaws.mobileconnectors.cognitoidentityprovider.handlers.ForgotPasswordHandler;
+import com.google.android.material.textfield.TextInputEditText;
 
 public class ForgetActivity extends AppCompatActivity {
 
     private ConstraintLayout layoutEmailEntry, layoutVerifyCode;
-    private EditText etForgotEmail, etVerificationCode, etNewPassword;
+    private EditText etForgotEmail, etVerificationCode;
+    TextInputEditText etNewPassword;
     private Button btnSendCode, btnResetPassword;
     private TextView[] tvCodes;
     private TextView tvResendCode;

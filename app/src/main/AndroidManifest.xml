@@ -26,9 +26,6 @@
         <activity
             android:name="ui.receiver.EditReceiverProfileActivity"
             android:exported="false" />
-<!--        <activity-->
-<!--            android:name="ui.receiver.EditReceiverProfileActivity"-->
-<!--            android:exported="false" /> &lt;!&ndash; Receiver Activities &ndash;&gt;-->
         <activity
             android:name="ui.receiver.ReceiverOrderDetailsActivity"
             android:exported="false"

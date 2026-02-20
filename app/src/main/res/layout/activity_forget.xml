@@ -4,10 +4,10 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fillViewport="true"
-    android:isScrollContainer="true"
-    android:fitsSystemWindows="true"
     android:background="@color/love_bg_warm"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true"
+    android:isScrollContainer="true"
     tools:context=".ForgetActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -22,8 +22,8 @@
             android:layout_height="48dp"
             android:layout_marginTop="24dp"
             android:background="@drawable/bg_design2_card"
-            android:src="@drawable/ic_back_chevron"
             android:padding="12dp"
+            android:src="@drawable/ic_back_chevron"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:tint="@color/love_text_deep" />
@@ -34,10 +34,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="40dp"
+            android:fontFamily="@font/moniqa_variable"
             android:text="Forgot Password"
             android:textColor="@color/love_text_deep"
             android:textSize="32sp"
-            android:fontFamily="@font/moniqa_variable"
             app:fontVariationSettings="'wght'900, 'wdth' 150"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/btnBack" />
@@ -81,15 +81,15 @@
                 android:layout_height="56dp"
                 android:layout_marginTop="8dp"
                 android:background="@drawable/bg_design3_field"
+                android:gravity="center_vertical"
                 android:hint="Your email"
+                android:includeFontPadding="false"
                 android:inputType="textEmailAddress"
                 android:paddingStart="20dp"
                 android:paddingEnd="20dp"
-                android:gravity="center_vertical"
-                android:includeFontPadding="false"
+                android:textColor="@color/love_text_deep"
                 android:textColorHint="#CCCCCC"
                 android:textSize="16sp"
-                android:textColor="@color/love_text_deep"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tvEmailLabel" />
@@ -100,13 +100,13 @@
                 android:layout_height="64dp"
                 android:layout_marginTop="32dp"
                 android:background="@drawable/bg_design3_button"
+                android:fontFamily="@font/moniqa_variable"
                 android:text="Send Code"
                 android:textAllCaps="false"
                 android:textColor="@color/white"
                 android:textSize="18sp"
-                android:fontFamily="@font/moniqa_variable"
-                app:fontVariationSettings="'wght'700, 'wdth' 150"
                 app:backgroundTint="@null"
+                app:fontVariationSettings="'wght'700, 'wdth' 150"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/etForgotEmail" />
@@ -147,12 +147,72 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:orientation="horizontal">
-                    <TextView android:id="@+id/tvCode1" android:layout_width="44dp" android:layout_height="56dp" android:layout_margin="3dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="22sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/tvCode2" android:layout_width="44dp" android:layout_height="56dp" android:layout_margin="3dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="22sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/tvCode3" android:layout_width="44dp" android:layout_height="56dp" android:layout_margin="3dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="22sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/tvCode4" android:layout_width="44dp" android:layout_height="56dp" android:layout_margin="3dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="22sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/tvCode5" android:layout_width="44dp" android:layout_height="56dp" android:layout_margin="3dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="22sp" android:textStyle="bold" />
-                    <TextView android:id="@+id/tvCode6" android:layout_width="44dp" android:layout_height="56dp" android:layout_margin="3dp" android:background="@drawable/bg_design3_field" android:gravity="center" android:textColor="@color/love_text_deep" android:textSize="22sp" android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCode1"
+                        android:layout_width="44dp"
+                        android:layout_height="56dp"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_design3_field"
+                        android:gravity="center"
+                        android:textColor="@color/love_text_deep"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCode2"
+                        android:layout_width="44dp"
+                        android:layout_height="56dp"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_design3_field"
+                        android:gravity="center"
+                        android:textColor="@color/love_text_deep"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCode3"
+                        android:layout_width="44dp"
+                        android:layout_height="56dp"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_design3_field"
+                        android:gravity="center"
+                        android:textColor="@color/love_text_deep"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCode4"
+                        android:layout_width="44dp"
+                        android:layout_height="56dp"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_design3_field"
+                        android:gravity="center"
+                        android:textColor="@color/love_text_deep"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCode5"
+                        android:layout_width="44dp"
+                        android:layout_height="56dp"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_design3_field"
+                        android:gravity="center"
+                        android:textColor="@color/love_text_deep"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/tvCode6"
+                        android:layout_width="44dp"
+                        android:layout_height="56dp"
+                        android:layout_margin="3dp"
+                        android:background="@drawable/bg_design3_field"
+                        android:gravity="center"
+                        android:textColor="@color/love_text_deep"
+                        android:textSize="22sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
 
                 <EditText
@@ -161,17 +221,17 @@
                     android:layout_height="match_parent"
                     android:background="@android:color/transparent"
                     android:cursorVisible="false"
-                    android:inputType="number"
                     android:digits="0123456789"
-                    android:maxLength="6"
-                    android:textColor="@android:color/transparent"
-                    android:textSize="28sp"
-                    android:paddingStart="16dp"
-                    android:paddingEnd="16dp"
-                    android:letterSpacing="1.1"
                     android:focusable="true"
                     android:focusableInTouchMode="true"
-                    android:importantForAutofill="no" />
+                    android:importantForAutofill="no"
+                    android:inputType="number"
+                    android:letterSpacing="1.1"
+                    android:maxLength="6"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:textColor="@android:color/transparent"
+                    android:textSize="28sp" />
             </FrameLayout>
 
             <!-- New Password Label -->
@@ -187,23 +247,35 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/flCodeContainer" />
 
-            <EditText
-                android:id="@+id/etNewPassword"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/etNewPasswordL"
                 android:layout_width="0dp"
                 android:layout_height="56dp"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/bg_design3_field"
-                android:hint="Enter new password"
-                android:inputType="textPassword"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:gravity="center_vertical"
-                android:includeFontPadding="false"
-                android:textColorHint="#CCCCCC"
-                android:textSize="16sp"
+                app:boxBackgroundMode="none"
+                app:hintEnabled="false"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tvNewPasswordLabel" />
+                app:layout_constraintTop_toBottomOf="@id/tvNewPasswordLabel"
+                app:passwordToggleEnabled="true"
+                app:passwordToggleTint="@color/love_text_deep">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etNewPassword"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_design3_field"
+                    android:gravity="center_vertical"
+                    android:hint="Enter new password"
+                    android:includeFontPadding="false"
+                    android:inputType="textPassword"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:textColorHint="#CCCCCC"
+                    android:textSize="16sp"
+                    android:textColor="@color/love_text_deep"/>
+            </com.google.android.material.textfield.TextInputLayout>
 
             <Button
                 android:id="@+id/btnResetPassword"
@@ -219,7 +291,7 @@
                 app:backgroundTint="@null"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/etNewPassword" />
+                app:layout_constraintTop_toBottomOf="@id/etNewPasswordL" />
 
             <TextView
                 android:id="@+id/tvResendCode"
